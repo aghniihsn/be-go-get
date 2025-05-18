@@ -59,6 +59,21 @@ func GetJadwalByID(c *fiber.Ctx) error {
 	return c.JSON(jadwal)
 }
 
+func GetJadwalsByFilmID(c *fiber.Ctx) error {
+	filmID := c.Params("filmId")
+	jadwalCollection := config.DB.Collection("jadwals")
+
+	var jadwals []models.Jadwal
+	cursor, err := jadwalCollection.Find(context.TODO(), bson.M{"film_id": filmID})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	if err := cursor.All(context.TODO(), &jadwals); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(jadwals)
+}
+
 func CreateJadwal(c *fiber.Ctx) error {
 	jadwalCollection := config.DB.Collection("jadwals")
 	var jadwal models.Jadwal

@@ -23,6 +23,7 @@ func SetupRoutes(app *fiber.App) {
 	api.Get("/jadwals", controllers.GetAllJadwals)
 	api.Get("/jadwals/:id", controllers.GetJadwalByID)
 	app.Get("/jadwals/detail", controllers.GetAllJadwalsWithFilm)
+	api.Get("/jadwals/film/:filmId", controllers.GetJadwalsByFilmID)
 	api.Post("/jadwals", controllers.CreateJadwal)
 	api.Put("/jadwals/:id", controllers.UpdateJadwal)
 	api.Delete("/jadwals/:id", controllers.DeleteJadwal)
