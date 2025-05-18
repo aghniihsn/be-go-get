@@ -42,4 +42,9 @@ func SetupRoutes(app *fiber.App) {
 	api.Put("/pembayarans/:id", controllers.UpdatePembayaran)
 	api.Delete("/pembayarans/:id", controllers.DeletePembayaran)
 
+	//Endpoint untuk User
+	api.Post("/users", controllers.CreateUser)
+	api.Get("/tikets/user/:user_id", controllers.GetTiketByUserID)
+	api.Get("/users/:id", controllers.GetUserByID)
+	api.Put("/users/:id", controllers.UpdateUser)
 }

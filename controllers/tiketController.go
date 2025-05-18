@@ -33,26 +33,52 @@ func GetTiketByID(c *fiber.Ctx) error {
 	return c.JSON(tiket)
 }
 
+func GetTiketByUserID(c *fiber.Ctx) error {
+	userID := c.Params("user_id")
+	tiketCollection := config.DB.Collection("tikets")
+
+	cursor, err := tiketCollection.Find(context.TODO(), bson.M{"user_id": userID})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+	}
+	var tikets []models.Tiket
+	if err := cursor.All(context.TODO(), &tikets); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Parse error"})
+	}
+	return c.JSON(tikets)
+}
+
 func CreateTiket(c *fiber.Ctx) error {
 	tiketCollection := config.DB.Collection("tikets")
 	jadwalCollection := config.DB.Collection("jadwals")
+	userCollection := config.DB.Collection("users") // ⬅️ Tambah ini
 
 	var tiket models.Tiket
 	if err := c.BodyParser(&tiket); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
-	if tiket.ID == "" || tiket.JadwalID == "" || tiket.Nama == "" || tiket.Email == "" || tiket.Jumlah <= 0 {
-		return c.Status(400).JSON(fiber.Map{"error": "All fields are required and jumlah must be > 0"})
+	if tiket.ID == "" || tiket.JadwalID == "" || tiket.Nama == "" || tiket.Email == "" || tiket.Jumlah <= 0 || tiket.UserID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "All fields are required"})
 	}
 
-	// Cek ID unik
+	// Cek ID unik tiket
 	count, _ := tiketCollection.CountDocuments(context.TODO(), bson.M{"id": tiket.ID})
 	if count > 0 {
 		return c.Status(400).JSON(fiber.Map{"error": "ID already exists"})
 	}
 
-	// Ambil harga dari koleksi jadwals
+	// Simpan user jika belum ada
+	userExist, _ := userCollection.CountDocuments(context.TODO(), bson.M{"id": tiket.UserID})
+	if userExist == 0 {
+		_, _ = userCollection.InsertOne(context.TODO(), bson.M{
+			"id":    tiket.UserID,
+			"nama":  tiket.Nama,
+			"email": tiket.Email,
+		})
+	}
+
+	// Ambil harga dari jadwal
 	var jadwal models.Jadwal
 	err := jadwalCollection.FindOne(context.TODO(), bson.M{"id": tiket.JadwalID}).Decode(&jadwal)
 	if err != nil {

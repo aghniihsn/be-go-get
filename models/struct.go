@@ -23,6 +23,7 @@ type Tiket struct {
 	Email      string  `json:"email" bson:"email"`
 	Jumlah     int     `json:"jumlah" bson:"jumlah"`
 	TotalHarga float64 `json:"total_harga" bson:"total_harga"`
+	UserID     string  `json:"user_id" bson:"user_id"` // <-- Tambahan ini
 }
 
 type Pembayaran struct {
@@ -31,4 +32,10 @@ type Pembayaran struct {
 	Metode  string  `json:"metode" bson:"metode"`
 	Status  string  `json:"status" bson:"status"`
 	Total   float64 `json:"total" bson:"total"`
+}
+
+type User struct {
+	ID    string `json:"id" bson:"id"`
+	Nama  string `json:"nama" bson:"nama"`
+	Email string `json:"email" bson:"email"`
 }
