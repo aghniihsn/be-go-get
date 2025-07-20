@@ -21,6 +21,7 @@ go.work
 /bin/
 /dist/
 /build/
+go-get-backend
 
 # IDE files
 .vscode/
@@ -38,15 +39,47 @@ go.work
 ehthumbs.db
 Thumbs.db
 
-# Environment variables
+# Environment variables (IMPORTANT: Contains secrets)
 .env
 .env.local
 .env.*.local
+.env.development
+.env.staging
+.env.production
 
 # Logs
 *.log
 logs/
+log/
 
 # Temporary files
 tmp/
 temp/
+.tmp/
+
+# JWT Secret backups (if any)
+*.env.backup
+.env.old
+
+# Database dumps
+*.sql
+*.db
+dump.rdb
+
+# Coverage reports
+coverage.out
+coverage.html
+
+# Air live reload
+.air.toml
+tmp/
+
+# Certificate files
+*.pem
+*.key
+*.crt
+*.p12
+
+# Local development
+.local/
+local.env

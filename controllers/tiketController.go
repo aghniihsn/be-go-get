@@ -34,10 +34,18 @@ func GetTiketByID(c *fiber.Ctx) error {
 }
 
 func GetTiketByUserID(c *fiber.Ctx) error {
-	userID := c.Params("user_id")
-	tiketCollection := config.DB.Collection("tikets")
+	requestedUserID := c.Params("user_id")
+	currentUser := c.Locals("user").(*models.JWTPayload)
 
-	cursor, err := tiketCollection.Find(context.TODO(), bson.M{"user_id": userID})
+	// Allow users to see only their own tickets, admin can see all
+	if currentUser.Role != "admin" && currentUser.ID != requestedUserID {
+		return c.Status(403).JSON(fiber.Map{
+			"error": "You can only access your own tickets",
+		})
+	}
+
+	tiketCollection := config.DB.Collection("tikets")
+	cursor, err := tiketCollection.Find(context.TODO(), bson.M{"user_id": requestedUserID})
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}

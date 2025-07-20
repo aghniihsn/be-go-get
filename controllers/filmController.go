@@ -9,6 +9,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// GetAllFilms godoc
+// @Summary Get all films
+// @Description Get list of all films in the cinema
+// @Tags Films
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.Film
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/films [get]
 func GetAllFilms(c *fiber.Ctx) error {
 	collection := config.DB.Collection("films")
 	var films []models.Film
@@ -22,6 +31,16 @@ func GetAllFilms(c *fiber.Ctx) error {
 	return c.JSON(films)
 }
 
+// GetFilmByID godoc
+// @Summary Get film by ID
+// @Description Get a single film by its ID
+// @Tags Films
+// @Accept json
+// @Produce json
+// @Param id path string true "Film ID"
+// @Success 200 {object} models.Film
+// @Failure 404 {object} map[string]interface{}
+// @Router /api/films/{id} [get]
 func GetFilmByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var film models.Film
@@ -32,6 +51,17 @@ func GetFilmByID(c *fiber.Ctx) error {
 	return c.JSON(film)
 }
 
+// CreateFilm godoc
+// @Summary Create a new film
+// @Description Create a new film with the input payload
+// @Tags Films
+// @Accept json
+// @Produce json
+// @Param film body models.Film true "Film object"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/films [post]
 func CreateFilm(c *fiber.Ctx) error {
 	var film models.Film
 	if err := c.BodyParser(&film); err != nil {
@@ -58,6 +88,18 @@ func CreateFilm(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"message": "Film created"})
 }
 
+// UpdateFilm godoc
+// @Summary Update a film
+// @Description Update film by ID
+// @Tags Films
+// @Accept json
+// @Produce json
+// @Param id path string true "Film ID"
+// @Param film body models.Film true "Film object"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /api/films/{id} [put]
 func UpdateFilm(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var film models.Film
@@ -84,6 +126,16 @@ func UpdateFilm(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Film updated"})
 }
 
+// DeleteFilm godoc
+// @Summary Delete a film
+// @Description Delete film by ID
+// @Tags Films
+// @Accept json
+// @Produce json
+// @Param id path string true "Film ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /api/films/{id} [delete]
 func DeleteFilm(c *fiber.Ctx) error {
 	id := c.Params("id")
 	collection := config.DB.Collection("films")

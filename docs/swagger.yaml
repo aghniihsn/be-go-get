@@ -1,0 +1,178 @@
+basePath: /
+definitions:
+  models.Film:
+    description: Film information
+    properties:
+      duration:
+        example: 181
+        type: integer
+      genre:
+        example: Action
+        type: string
+      id:
+        example: film001
+        type: string
+      title:
+        example: 'Avengers: Endgame'
+        type: string
+    type: object
+host: localhost:3000
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Cinema ticket booking system with payment integration
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Cinema Booking API
+  version: "1.0"
+paths:
+  /api/films:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all films in the cinema
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Film'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all films
+      tags:
+      - Films
+    post:
+      consumes:
+      - application/json
+      description: Create a new film with the input payload
+      parameters:
+      - description: Film object
+        in: body
+        name: film
+        required: true
+        schema:
+          $ref: '#/definitions/models.Film'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new film
+      tags:
+      - Films
+  /api/films/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete film by ID
+      parameters:
+      - description: Film ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a film
+      tags:
+      - Films
+    get:
+      consumes:
+      - application/json
+      description: Get a single film by its ID
+      parameters:
+      - description: Film ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Film'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get film by ID
+      tags:
+      - Films
+    put:
+      consumes:
+      - application/json
+      description: Update film by ID
+      parameters:
+      - description: Film ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Film object
+        in: body
+        name: film
+        required: true
+        schema:
+          $ref: '#/definitions/models.Film'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update a film
+      tags:
+      - Films
+schemes:
+- http
+swagger: "2.0"

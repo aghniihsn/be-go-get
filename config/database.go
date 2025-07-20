@@ -12,7 +12,7 @@ import (
 var DB *mongo.Database
 
 func ConnectDB() {
-	mongoString := os.Getenv("MONGOSTRING") // ambil dari .env di sini
+	mongoString := os.Getenv("MONGOSTRING")
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoString))
 	if err != nil {
 		panic(err)
