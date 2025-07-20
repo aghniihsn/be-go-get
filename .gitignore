@@ -83,3 +83,6 @@ tmp/
 # Local development
 .local/
 local.env
+
+/docs/dots/
+/docs/guide_ai

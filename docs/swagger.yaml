@@ -1,19 +1,43 @@
 basePath: /
 definitions:
   models.Film:
-    description: Film information
     properties:
+      _id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
       duration:
-        example: 181
+        description: in minutes
         type: integer
       genre:
-        example: Action
         type: string
-      id:
-        example: film001
+      poster_url:
+        type: string
+      rating:
         type: string
       title:
-        example: 'Avengers: Endgame'
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.User:
+    properties:
+      _id:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+      role:
+        description: '"user" or "admin"'
+        type: string
+      updated_at:
+        type: string
+      username:
         type: string
     type: object
 host: localhost:3000
@@ -55,7 +79,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new film with the input payload
+      description: Create a new film in the cinema
       parameters:
       - description: Film object
         in: body
@@ -173,6 +197,70 @@ paths:
       summary: Update a film
       tags:
       - Films
+  /api/users/{id}:
+    get:
+      description: Get user information by ID (admin only or own profile)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - Users
+    put:
+      description: Update user information (own profile or admin)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - Users
 schemes:
 - http
 swagger: "2.0"
