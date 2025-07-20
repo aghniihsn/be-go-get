@@ -4,9 +4,11 @@ import (
 	"context"
 	"go-get-backend/config"
 	"go-get-backend/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetAllFilms godoc
@@ -53,7 +55,7 @@ func GetFilmByID(c *fiber.Ctx) error {
 
 // CreateFilm godoc
 // @Summary Create a new film
-// @Description Create a new film with the input payload
+// @Description Create a new film in the cinema
 // @Tags Films
 // @Accept json
 // @Produce json
@@ -63,29 +65,54 @@ func GetFilmByID(c *fiber.Ctx) error {
 // @Failure 500 {object} map[string]interface{}
 // @Router /api/films [post]
 func CreateFilm(c *fiber.Ctx) error {
-	var film models.Film
-	if err := c.BodyParser(&film); err != nil {
+	var input struct {
+		Title       string `json:"title"`
+		Genre       string `json:"genre"`
+		Duration    int    `json:"duration"`
+		Rating      string `json:"rating"`
+		Description string `json:"description"`
+		PosterURL   string `json:"poster_url"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
-	if film.ID == "" || film.Title == "" || film.Genre == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "All fields are required"})
+	if input.Title == "" || input.Genre == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Title and genre are required"})
 	}
-	if film.Duration <= 0 {
+	if input.Duration <= 0 {
 		return c.Status(400).JSON(fiber.Map{"error": "Duration must be positive"})
 	}
 
-	collection := config.DB.Collection("films")
-	count, _ := collection.CountDocuments(context.TODO(), bson.M{"id": film.ID})
-	if count > 0 {
-		return c.Status(400).JSON(fiber.Map{"error": "ID already exists"})
+	// Create film with ObjectID
+	now := time.Now()
+	film := models.Film{
+		ID:          primitive.NewObjectID(),
+		Title:       input.Title,
+		Genre:       input.Genre,
+		Duration:    input.Duration,
+		Rating:      input.Rating,
+		Description: input.Description,
+		PosterURL:   input.PosterURL,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
-	_, err := collection.InsertOne(context.TODO(), film)
+	collection := config.DB.Collection("films")
+
+	result, err := collection.InsertOne(context.TODO(), film)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.Status(201).JSON(fiber.Map{"message": "Film created"})
+
+	// Set the inserted ID
+	film.ID = result.InsertedID.(primitive.ObjectID)
+
+	return c.Status(201).JSON(fiber.Map{
+		"message": "Film created successfully",
+		"film":    film,
+	})
 }
 
 // UpdateFilm godoc
@@ -112,9 +139,13 @@ func UpdateFilm(c *fiber.Ctx) error {
 
 	update := bson.M{
 		"$set": bson.M{
-			"title":    film.Title,
-			"genre":    film.Genre,
-			"duration": film.Duration,
+			"title":       film.Title,
+			"genre":       film.Genre,
+			"duration":    film.Duration,
+			"rating":      film.Rating,
+			"description": film.Description,
+			"poster_url":  film.PosterURL,
+			"updated_at":  time.Now(),
 		},
 	}
 
@@ -123,7 +154,7 @@ func UpdateFilm(c *fiber.Ctx) error {
 	if err != nil || res.MatchedCount == 0 {
 		return c.Status(404).JSON(fiber.Map{"error": "Film not found or update failed"})
 	}
-	return c.JSON(fiber.Map{"message": "Film updated"})
+	return c.JSON(fiber.Map{"message": "Film updated successfully"})
 }
 
 // DeleteFilm godoc

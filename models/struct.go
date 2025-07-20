@@ -1,78 +1,90 @@
 package models
 
-// Film represents a movie in the cinema
-// @Description Film information
-type Film struct {
-	ID       string `json:"id" bson:"id" example:"film001"`
-	Title    string `json:"title" bson:"title" example:"Avengers: Endgame"`
-	Genre    string `json:"genre" bson:"genre" example:"Action"`
-	Duration int    `json:"duration" bson:"duration" example:"181"`
-}
+import (
+	"time"
 
-// Jadwal represents a movie schedule
-// @Description Movie schedule information
-type Jadwal struct {
-	ID      string  `json:"id" bson:"id" example:"jadwal001"`
-	FilmID  string  `json:"film_id" bson:"film_id" example:"film001"`
-	Tanggal string  `json:"tanggal" bson:"tanggal" example:"2024-01-15"`
-	Waktu   string  `json:"waktu" bson:"waktu" example:"19:00"`
-	Ruangan string  `json:"ruangan" bson:"ruangan" example:"Cinema 1"`
-	Harga   float64 `json:"harga" bson:"harga" example:"50000"`
-}
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
-// Tiket represents a ticket booking
-// @Description Ticket booking information
-type Tiket struct {
-	ID         string  `json:"id" bson:"id" example:"tiket001"`
-	JadwalID   string  `json:"jadwal_id" bson:"jadwal_id" example:"jadwal001"`
-	Nama       string  `json:"nama" bson:"nama" example:"John Doe"`
-	Email      string  `json:"email" bson:"email" example:"john@example.com"`
-	Jumlah     int     `json:"jumlah" bson:"jumlah" example:"2"`
-	TotalHarga float64 `json:"total_harga" bson:"total_harga" example:"100000"`
-	UserID     string  `json:"user_id" bson:"user_id" example:"user001"`
-}
-
-// Pembayaran represents a payment record
-// @Description Payment information
-type Pembayaran struct {
-	ID      string  `json:"id" bson:"id" example:"pay001"`
-	TiketID string  `json:"tiket_id" bson:"tiket_id" example:"tiket001"`
-	Metode  string  `json:"metode" bson:"metode" example:"credit_card"`
-	Status  string  `json:"status" bson:"status" example:"pending"`
-	Total   float64 `json:"total" bson:"total" example:"100000"`
-}
-
-// User represents a user in the system
-// @Description User information
+// User represents user data structure
 type User struct {
-	ID       string `json:"id" bson:"id" example:"user001"`
-	Nama     string `json:"nama" bson:"nama" example:"John Doe"`
-	Email    string `json:"email" bson:"email" example:"john@example.com"`
-	Password string `json:"password,omitempty" bson:"password" example:"password123"`
-	Role     string `json:"role" bson:"role" example:"user"`
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Username  string             `json:"username" bson:"username"`
+	Email     string             `json:"email" bson:"email"`
+	Password  string             `json:"password" bson:"password"`
+	Role      string             `json:"role" bson:"role"` // "user" or "admin"
+	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
+}
+
+// Film represents movie data structure
+type Film struct {
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title       string             `json:"title" bson:"title"`
+	Genre       string             `json:"genre" bson:"genre"`
+	Duration    int                `json:"duration" bson:"duration"` // in minutes
+	Rating      string             `json:"rating" bson:"rating"`
+	Description string             `json:"description" bson:"description"`
+	PosterURL   string             `json:"poster_url" bson:"poster_url"`
+	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
+}
+
+// Jadwal represents movie schedule data structure
+type Jadwal struct {
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	FilmID    primitive.ObjectID `json:"film_id" bson:"film_id"`
+	Tanggal   string             `json:"tanggal" bson:"tanggal"`
+	Waktu     string             `json:"waktu" bson:"waktu"`
+	Ruangan   string             `json:"ruangan" bson:"ruangan"`
+	Harga     float64            `json:"harga" bson:"harga"`
+	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
+}
+
+// Tiket represents ticket data structure
+type Tiket struct {
+	ID               primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	UserID           primitive.ObjectID `json:"user_id" bson:"user_id"`
+	JadwalID         primitive.ObjectID `json:"jadwal_id" bson:"jadwal_id"`
+	Kursi            string             `json:"kursi" bson:"kursi"`
+	Status           string             `json:"status" bson:"status"` // "confirmed", "cancelled", "used"
+	TanggalPembelian time.Time          `json:"tanggal_pembelian" bson:"tanggal_pembelian"`
+	CreatedAt        time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt        time.Time          `json:"updated_at" bson:"updated_at"`
+}
+
+// Pembayaran represents payment data structure
+type Pembayaran struct {
+	ID                primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	TiketID           primitive.ObjectID `json:"tiket_id" bson:"tiket_id"`
+	UserID            primitive.ObjectID `json:"user_id" bson:"user_id"`
+	Jumlah            float64            `json:"jumlah" bson:"jumlah"`
+	MetodePembayaran  string             `json:"metode_pembayaran" bson:"metode_pembayaran"`
+	Status            string             `json:"status" bson:"status"` // "pending", "completed", "failed"
+	TanggalPembayaran time.Time          `json:"tanggal_pembayaran" bson:"tanggal_pembayaran"`
+	CreatedAt         time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt         time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 // UserLogin represents login request
-// @Description User login information
 type UserLogin struct {
-	Email    string `json:"email" example:"john@example.com"`
-	Password string `json:"password" example:"password123"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 // UserRegister represents registration request
-// @Description User registration information
 type UserRegister struct {
-	ID       string `json:"id" example:"user001"`
-	Nama     string `json:"nama" example:"John Doe"`
-	Email    string `json:"email" example:"john@example.com"`
-	Password string `json:"password" example:"password123"`
-	Role     string `json:"role" example:"user"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
 }
 
 // JWTPayload represents JWT token payload
-// @Description JWT token payload
 type JWTPayload struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Role  string `json:"role"`
+	ID       primitive.ObjectID `json:"id"`
+	Username string             `json:"username"`
+	Email    string             `json:"email"`
+	Role     string             `json:"role"`
 }

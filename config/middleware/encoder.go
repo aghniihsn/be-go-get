@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Encoder creates JWT token from user data
@@ -17,13 +18,14 @@ func Encoder(userData models.JWTPayload) (string, error) {
 		secretKey = "your-default-secret-key" // Default untuk development
 	}
 
-	// Create JWT claims
+	// Create JWT claims - convert ObjectID to string for JWT
 	claims := jwt.MapClaims{
-		"id":    userData.ID,
-		"email": userData.Email,
-		"role":  userData.Role,
-		"exp":   time.Now().Add(time.Hour * 24 * 7).Unix(), // Token expires in 7 days
-		"iat":   time.Now().Unix(),
+		"id":       userData.ID.Hex(),
+		"username": userData.Username,
+		"email":    userData.Email,
+		"role":     userData.Role,
+		"exp":      time.Now().Add(time.Hour * 24 * 7).Unix(), // Token expires in 7 days
+		"iat":      time.Now().Unix(),
 	}
 
 	// Create token with claims
@@ -63,10 +65,18 @@ func Decoder(tokenString string) (*models.JWTPayload, error) {
 
 	// Extract claims
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Convert string ID back to ObjectID
+		idStr := claims["id"].(string)
+		objectID, err := primitive.ObjectIDFromHex(idStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid user ID in token")
+		}
+
 		userData := &models.JWTPayload{
-			ID:    claims["id"].(string),
-			Email: claims["email"].(string),
-			Role:  claims["role"].(string),
+			ID:       objectID,
+			Username: claims["username"].(string),
+			Email:    claims["email"].(string),
+			Role:     claims["role"].(string),
 		}
 		return userData, nil
 	}

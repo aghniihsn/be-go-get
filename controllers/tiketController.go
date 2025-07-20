@@ -4,9 +4,11 @@ import (
 	"context"
 	"go-get-backend/config"
 	"go-get-backend/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetAllTikets(c *fiber.Ctx) error {
@@ -34,99 +36,126 @@ func GetTiketByID(c *fiber.Ctx) error {
 }
 
 func GetTiketByUserID(c *fiber.Ctx) error {
-	requestedUserID := c.Params("user_id")
+	requestedUserIDStr := c.Params("user_id")
 	currentUser := c.Locals("user").(*models.JWTPayload)
+
+	// Convert string to ObjectID for comparison
+	requestedUserID, err := primitive.ObjectIDFromHex(requestedUserIDStr)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid user ID format"})
+	}
 
 	// Allow users to see only their own tickets, admin can see all
 	if currentUser.Role != "admin" && currentUser.ID != requestedUserID {
-		return c.Status(403).JSON(fiber.Map{
-			"error": "You can only access your own tickets",
-		})
+		return c.Status(403).JSON(fiber.Map{"error": "Access denied"})
 	}
 
 	tiketCollection := config.DB.Collection("tikets")
+	var tikets []models.Tiket
 	cursor, err := tiketCollection.Find(context.TODO(), bson.M{"user_id": requestedUserID})
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
-	var tikets []models.Tiket
 	if err := cursor.All(context.TODO(), &tikets); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Parse error"})
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(tikets)
 }
 
 func CreateTiket(c *fiber.Ctx) error {
 	tiketCollection := config.DB.Collection("tikets")
-	jadwalCollection := config.DB.Collection("jadwals")
-	userCollection := config.DB.Collection("users") // ⬅️ Tambah ini
 
-	var tiket models.Tiket
-	if err := c.BodyParser(&tiket); err != nil {
+	var input struct {
+		JadwalID string `json:"jadwal_id"`
+		UserID   string `json:"user_id"`
+		Kursi    string `json:"kursi"`
+		Status   string `json:"status"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
-	if tiket.ID == "" || tiket.JadwalID == "" || tiket.Nama == "" || tiket.Email == "" || tiket.Jumlah <= 0 || tiket.UserID == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "All fields are required"})
+	if input.JadwalID == "" || input.UserID == "" || input.Kursi == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "JadwalID, UserID, and Kursi are required"})
 	}
 
-	// Cek ID unik tiket
-	count, _ := tiketCollection.CountDocuments(context.TODO(), bson.M{"id": tiket.ID})
-	if count > 0 {
-		return c.Status(400).JSON(fiber.Map{"error": "ID already exists"})
-	}
-
-	// Simpan user jika belum ada
-	userExist, _ := userCollection.CountDocuments(context.TODO(), bson.M{"id": tiket.UserID})
-	if userExist == 0 {
-		_, _ = userCollection.InsertOne(context.TODO(), bson.M{
-			"id":    tiket.UserID,
-			"nama":  tiket.Nama,
-			"email": tiket.Email,
-		})
-	}
-
-	// Ambil harga dari jadwal
-	var jadwal models.Jadwal
-	err := jadwalCollection.FindOne(context.TODO(), bson.M{"id": tiket.JadwalID}).Decode(&jadwal)
+	// Convert string IDs to ObjectIDs
+	jadwalID, err := primitive.ObjectIDFromHex(input.JadwalID)
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid JadwalID"})
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid JadwalID format"})
 	}
 
-	tiket.TotalHarga = float64(tiket.Jumlah) * jadwal.Harga
+	userID, err := primitive.ObjectIDFromHex(input.UserID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid UserID format"})
+	}
 
-	_, err = tiketCollection.InsertOne(context.TODO(), tiket)
+	// Verify jadwal exists
+	jadwalCollection := config.DB.Collection("jadwals")
+	var jadwal models.Jadwal
+	err = jadwalCollection.FindOne(context.TODO(), bson.M{"_id": jadwalID}).Decode(&jadwal)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Jadwal not found"})
+	}
+
+	// Verify user exists
+	userCollection := config.DB.Collection("users")
+	var user models.User
+	err = userCollection.FindOne(context.TODO(), bson.M{"_id": userID}).Decode(&user)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "User not found"})
+	}
+
+	// Set default status if not provided
+	status := input.Status
+	if status == "" {
+		status = "confirmed"
+	}
+
+	// Create tiket with ObjectID
+	now := time.Now()
+	tiket := models.Tiket{
+		ID:               primitive.NewObjectID(),
+		UserID:           userID,
+		JadwalID:         jadwalID,
+		Kursi:            input.Kursi,
+		Status:           status,
+		TanggalPembelian: now,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+
+	result, err := tiketCollection.InsertOne(context.TODO(), tiket)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.Status(201).JSON(fiber.Map{"message": "Tiket created", "total_harga": tiket.TotalHarga})
+
+	// Set the inserted ID
+	tiket.ID = result.InsertedID.(primitive.ObjectID)
+
+	return c.Status(201).JSON(fiber.Map{
+		"message": "Tiket created successfully",
+		"tiket":   tiket,
+	})
 }
 
 func UpdateTiket(c *fiber.Ctx) error {
 	tiketCollection := config.DB.Collection("tikets")
-	jadwalCollection := config.DB.Collection("jadwals")
 	id := c.Params("id")
-
 	var tiket models.Tiket
 	if err := c.BodyParser(&tiket); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
-	var jadwal models.Jadwal
-	err := jadwalCollection.FindOne(context.TODO(), bson.M{"id": tiket.JadwalID}).Decode(&jadwal)
-	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid jadwal_id"})
-	}
-
-	tiket.TotalHarga = float64(tiket.Jumlah) * jadwal.Harga
-
 	update := bson.M{
 		"$set": bson.M{
-			"jadwal_id":   tiket.JadwalID,
-			"nama":        tiket.Nama,
-			"email":       tiket.Email,
-			"jumlah":      tiket.Jumlah,
-			"total_harga": tiket.TotalHarga,
+			"user_id":           tiket.UserID,
+			"jadwal_id":         tiket.JadwalID,
+			"kursi":             tiket.Kursi,
+			"status":            tiket.Status,
+			"tanggal_pembelian": tiket.TanggalPembelian,
+			"updated_at":        time.Now(),
 		},
 	}
 
@@ -134,7 +163,7 @@ func UpdateTiket(c *fiber.Ctx) error {
 	if err != nil || res.MatchedCount == 0 {
 		return c.Status(404).JSON(fiber.Map{"error": "Tiket not found or update failed"})
 	}
-	return c.JSON(fiber.Map{"message": "Tiket updated", "total_harga": tiket.TotalHarga})
+	return c.JSON(fiber.Map{"message": "Tiket updated successfully"})
 }
 
 func DeleteTiket(c *fiber.Ctx) error {
@@ -144,5 +173,5 @@ func DeleteTiket(c *fiber.Ctx) error {
 	if err != nil || res.DeletedCount == 0 {
 		return c.Status(404).JSON(fiber.Map{"error": "Tiket not found"})
 	}
-	return c.JSON(fiber.Map{"message": "Tiket deleted"})
+	return c.JSON(fiber.Map{"message": "Tiket deleted successfully"})
 }

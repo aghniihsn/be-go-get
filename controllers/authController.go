@@ -6,22 +6,14 @@ import (
 	"go-get-backend/config/middleware"
 	"go-get-backend/models"
 	"go-get-backend/pkg/password"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Register godoc
-// @Summary Register new user
-// @Description Register a new user with email and password
-// @Tags Authentication
-// @Accept json
-// @Produce json
-// @Param user body models.UserRegister true "User registration data"
-// @Success 201 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
-// @Router /api/auth/register [post]
+// Register handles user registration
 func Register(c *fiber.Ctx) error {
 	userCollection := config.DB.Collection("users")
 	var input models.UserRegister
@@ -33,9 +25,9 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	// Validation
-	if input.ID == "" || input.Email == "" || input.Nama == "" || input.Password == "" {
+	if input.Email == "" || input.Username == "" || input.Password == "" {
 		return c.Status(400).JSON(fiber.Map{
-			"error": "All fields are required",
+			"error": "Email, username, and password are required",
 		})
 	}
 
@@ -44,16 +36,16 @@ func Register(c *fiber.Ctx) error {
 		input.Role = "user"
 	}
 
-	// Check if user already exists (by email or ID)
+	// Check if user already exists (by email or username)
 	count, _ := userCollection.CountDocuments(context.TODO(), bson.M{
 		"$or": []bson.M{
 			{"email": input.Email},
-			{"id": input.ID},
+			{"username": input.Username},
 		},
 	})
 	if count > 0 {
 		return c.Status(400).JSON(fiber.Map{
-			"error": "User with this email or ID already exists",
+			"error": "User with this email or username already exists",
 		})
 	}
 
@@ -65,44 +57,40 @@ func Register(c *fiber.Ctx) error {
 		})
 	}
 
-	// Create user
+	// Create user with ObjectID
+	now := time.Now()
 	user := models.User{
-		ID:       input.ID,
-		Nama:     input.Nama,
-		Email:    input.Email,
-		Password: hashedPassword,
-		Role:     input.Role,
+		ID:        primitive.NewObjectID(),
+		Username:  input.Username,
+		Email:     input.Email,
+		Password:  hashedPassword,
+		Role:      input.Role,
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 
-	_, err = userCollection.InsertOne(context.TODO(), user)
+	result, err := userCollection.InsertOne(context.TODO(), user)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
+	// Set the inserted ID
+	user.ID = result.InsertedID.(primitive.ObjectID)
+
 	return c.Status(201).JSON(fiber.Map{
 		"message": "User registered successfully",
 		"user": fiber.Map{
-			"id":    user.ID,
-			"nama":  user.Nama,
-			"email": user.Email,
-			"role":  user.Role,
+			"_id":      user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+			"role":     user.Role,
 		},
 	})
 }
 
-// Login godoc
-// @Summary User login
-// @Description Authenticate user and return JWT token
-// @Tags Authentication
-// @Accept json
-// @Produce json
-// @Param credentials body models.UserLogin true "User login credentials"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 401 {object} map[string]interface{}
-// @Router /api/auth/login [post]
+// Login handles user authentication
 func Login(c *fiber.Ctx) error {
 	userCollection := config.DB.Collection("users")
 	var input models.UserLogin
@@ -113,7 +101,6 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validation
 	if input.Email == "" || input.Password == "" {
 		return c.Status(400).JSON(fiber.Map{
 			"error": "Email and password are required",
@@ -129,22 +116,20 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	// Verify password
-	err = password.VerifyPassword(input.Password, user.Password)
-	if err != nil {
+	// Check password using VerifyPassword
+	if password.VerifyPassword(input.Password, user.Password) != nil {
 		return c.Status(401).JSON(fiber.Map{
 			"error": "Invalid email or password",
 		})
 	}
 
-	// Generate JWT token
-	jwtPayload := models.JWTPayload{
-		ID:    user.ID,
-		Email: user.Email,
-		Role:  user.Role,
-	}
-
-	token, err := middleware.Encoder(jwtPayload)
+	// Generate JWT token using Encoder
+	token, err := middleware.Encoder(models.JWTPayload{
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		Role:     user.Role,
+	})
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error": "Failed to generate token",
@@ -155,41 +140,76 @@ func Login(c *fiber.Ctx) error {
 		"message": "Login successful",
 		"token":   token,
 		"user": fiber.Map{
-			"id":    user.ID,
-			"nama":  user.Nama,
-			"email": user.Email,
-			"role":  user.Role,
+			"_id":      user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+			"role":     user.Role,
 		},
 	})
 }
 
-// GetProfile godoc
-// @Summary Get user profile
-// @Description Get current user profile from JWT token
-// @Tags Authentication
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} models.User
-// @Failure 401 {object} map[string]interface{}
-// @Router /api/auth/profile [get]
+// GetProfile handles getting user profile
 func GetProfile(c *fiber.Ctx) error {
-	// Get user from middleware context
-	userData := c.Locals("user").(*models.JWTPayload)
+	currentUser := c.Locals("user").(*models.JWTPayload)
 
 	userCollection := config.DB.Collection("users")
 	var user models.User
-	err := userCollection.FindOne(context.TODO(), bson.M{"id": userData.ID}).Decode(&user)
+	err := userCollection.FindOne(context.TODO(), bson.M{"_id": currentUser.ID}).Decode(&user)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{
 			"error": "User not found",
 		})
 	}
 
-	// Remove password from response
-	user.Password = ""
+	return c.JSON(fiber.Map{
+		"_id":      user.ID,
+		"username": user.Username,
+		"email":    user.Email,
+		"role":     user.Role,
+	})
+}
+
+// UpdateProfile handles updating user profile
+func UpdateProfile(c *fiber.Ctx) error {
+	currentUser := c.Locals("user").(*models.JWTPayload)
+	userCollection := config.DB.Collection("users")
+
+	var input struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid input",
+		})
+	}
+
+	// Build update document
+	updateDoc := bson.M{
+		"updated_at": time.Now(),
+	}
+
+	if input.Username != "" {
+		updateDoc["username"] = input.Username
+	}
+	if input.Email != "" {
+		updateDoc["email"] = input.Email
+	}
+
+	// Update user
+	_, err := userCollection.UpdateOne(
+		context.TODO(),
+		bson.M{"_id": currentUser.ID},
+		bson.M{"$set": updateDoc},
+	)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to update profile",
+		})
+	}
 
 	return c.JSON(fiber.Map{
-		"user": user,
+		"message": "Profile updated successfully",
 	})
 }
