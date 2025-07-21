@@ -46,15 +46,19 @@ const (
 
 // Jadwal represents movie schedule data structure
 type Jadwal struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID        primitive.ObjectID `json:"-" bson:"_id,omitempty"`
 	FilmID    primitive.ObjectID `json:"film_id" bson:"film_id"`
-	Tanggal   string             `json:"tanggal" bson:"tanggal"`
-	Waktu     string             `json:"waktu" bson:"waktu"`
-	Ruangan   string             `json:"ruangan" bson:"ruangan"`
+	FilmTitle string             `json:"film_title" bson:"film_title"`
+	Tanggal   string             `json:"tanggal" bson:"tanggal"` // format: YYYY-MM-DD
+	Waktu     string             `json:"waktu" bson:"waktu"`     // format: HH:MM
+	Ruangan   string             `json:"ruangan" bson:"ruangan"` // enum: Studio 1-5
 	Harga     float64            `json:"harga" bson:"harga"`
-	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
+	CreatedAt time.Time          `json:"-" bson:"created_at"`
+	UpdatedAt time.Time          `json:"-" bson:"updated_at"`
 }
+
+// Enum daftar ruangan
+var ValidStudios = []string{"Studio 1", "Studio 2", "Studio 3", "Studio 4", "Studio 5"}
 
 // Tiket represents ticket data structure
 type Tiket struct {

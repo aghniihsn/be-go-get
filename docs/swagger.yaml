@@ -18,6 +18,24 @@ definitions:
       title:
         type: string
     type: object
+  models.Jadwal:
+    properties:
+      film_id:
+        type: string
+      film_title:
+        type: string
+      harga:
+        type: number
+      ruangan:
+        description: 'enum: Studio 1-5'
+        type: string
+      tanggal:
+        description: 'format: YYYY-MM-DD'
+        type: string
+      waktu:
+        description: 'format: HH:MM'
+        type: string
+    type: object
   models.User:
     properties:
       address:
@@ -307,6 +325,154 @@ paths:
       summary: Update a film
       tags:
       - Films
+  /api/jadwals:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Jadwal'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all jadwal
+      tags:
+      - Jadwal
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Jadwal object
+        in: body
+        name: jadwal
+        required: true
+        schema:
+          $ref: '#/definitions/models.Jadwal'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create new jadwal
+      tags:
+      - Jadwal
+  /api/jadwals/{id}:
+    delete:
+      parameters:
+      - description: Jadwal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete jadwal by ID
+      tags:
+      - Jadwal
+    get:
+      parameters:
+      - description: Jadwal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Jadwal'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get jadwal by ID
+      tags:
+      - Jadwal
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Jadwal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Jadwal object
+        in: body
+        name: jadwal
+        required: true
+        schema:
+          $ref: '#/definitions/models.Jadwal'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update jadwal by ID
+      tags:
+      - Jadwal
   /api/users/{id}:
     get:
       description: Get user information by ID (admin only or own profile)
