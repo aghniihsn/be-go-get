@@ -13,6 +13,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Register godoc
+// @Summary Register a new user
+// @Description Register a new user (user or admin)
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body models.UserRegister true "User registration data"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/auth/register [post]
 // Register handles user registration
 func Register(c *fiber.Ctx) error {
 	userCollection := config.DB.Collection("users")
@@ -21,6 +32,12 @@ func Register(c *fiber.Ctx) error {
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"error": "Invalid input",
+		})
+	}
+	// Gender validation (only 'male' or 'female' allowed)
+	if input.Gender != "" && input.Gender != "male" && input.Gender != "female" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Gender must be either 'male' or 'female'",
 		})
 	}
 
@@ -60,13 +77,19 @@ func Register(c *fiber.Ctx) error {
 	// Create user with ObjectID
 	now := time.Now()
 	user := models.User{
-		ID:        primitive.NewObjectID(),
-		Username:  input.Username,
-		Email:     input.Email,
-		Password:  hashedPassword,
-		Role:      input.Role,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:                primitive.NewObjectID(),
+		Username:          input.Username,
+		Email:             input.Email,
+		Password:          hashedPassword,
+		Role:              input.Role,
+		Firstname:         input.Firstname,
+		Lastname:          input.Lastname,
+		Gender:            input.Gender,
+		PhoneNumber:       input.PhoneNumber,
+		ProfilePictureURL: input.ProfilePictureURL,
+		Address:           input.Address,
+		CreatedAt:         now,
+		UpdatedAt:         now,
 	}
 
 	result, err := userCollection.InsertOne(context.TODO(), user)
@@ -82,14 +105,32 @@ func Register(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{
 		"message": "User registered successfully",
 		"user": fiber.Map{
-			"_id":      user.ID,
-			"username": user.Username,
-			"email":    user.Email,
-			"role":     user.Role,
+			"_id":                 user.ID,
+			"username":            user.Username,
+			"email":               user.Email,
+			"role":                user.Role,
+			"firstname":           user.Firstname,
+			"lastname":            user.Lastname,
+			"gender":              user.Gender,
+			"phone_number":        user.PhoneNumber,
+			"profile_picture_url": user.ProfilePictureURL,
+			"address":             user.Address,
 		},
 	})
 }
 
+// Login godoc
+// @Summary Login user
+// @Description Authenticate user and get JWT token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param credentials body models.UserLogin true "User login credentials"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/auth/login [post]
 // Login handles user authentication
 func Login(c *fiber.Ctx) error {
 	userCollection := config.DB.Collection("users")
@@ -162,26 +203,49 @@ func GetProfile(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"_id":      user.ID,
-		"username": user.Username,
-		"email":    user.Email,
-		"role":     user.Role,
+		"_id":                 user.ID,
+		"username":            user.Username,
+		"email":               user.Email,
+		"role":                user.Role,
+		"firstname":           user.Firstname,
+		"lastname":            user.Lastname,
+		"gender":              user.Gender,
+		"phone_number":        user.PhoneNumber,
+		"profile_picture_url": user.ProfilePictureURL,
+		"address":             user.Address,
+		"created_at":          user.CreatedAt,
+		"updated_at":          user.UpdatedAt,
 	})
 }
 
+// UpdateProfile godoc
+// @Summary Update own user profile
+// @Description Update authenticated user's profile
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User profile update data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Security BearerAuth
+// @Router /api/auth/profile [put]
 // UpdateProfile handles updating user profile
 func UpdateProfile(c *fiber.Ctx) error {
 	currentUser := c.Locals("user").(*models.JWTPayload)
 	userCollection := config.DB.Collection("users")
 
-	var input struct {
-		Username string `json:"username"`
-		Email    string `json:"email"`
-	}
-
+	var input models.User
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"error": "Invalid input",
+		})
+	}
+	// Gender validation (only 'male' or 'female' allowed)
+	if input.Gender != "" && input.Gender != "male" && input.Gender != "female" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Gender must be either 'male' or 'female'",
 		})
 	}
 
@@ -189,12 +253,29 @@ func UpdateProfile(c *fiber.Ctx) error {
 	updateDoc := bson.M{
 		"updated_at": time.Now(),
 	}
-
 	if input.Username != "" {
 		updateDoc["username"] = input.Username
 	}
 	if input.Email != "" {
 		updateDoc["email"] = input.Email
+	}
+	if input.Firstname != "" {
+		updateDoc["firstname"] = input.Firstname
+	}
+	if input.Lastname != "" {
+		updateDoc["lastname"] = input.Lastname
+	}
+	if input.Gender != "" {
+		updateDoc["gender"] = input.Gender
+	}
+	if input.PhoneNumber != "" {
+		updateDoc["phone_number"] = input.PhoneNumber
+	}
+	if input.ProfilePictureURL != "" {
+		updateDoc["profile_picture_url"] = input.ProfilePictureURL
+	}
+	if input.Address != "" {
+		updateDoc["address"] = input.Address
 	}
 
 	// Update user

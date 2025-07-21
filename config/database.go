@@ -17,6 +17,6 @@ func ConnectDB() {
 	if err != nil {
 		panic(err)
 	}
-	DB = client.Database("dbFilm-dev")
-	fmt.Println("MongoDB Connected")
+	DB = client.Database(os.Getenv("COLLECTION"))
+	fmt.Println("MongoDB Connected to database:", DB.Name())
 }

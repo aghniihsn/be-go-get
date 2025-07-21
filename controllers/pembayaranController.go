@@ -27,12 +27,41 @@ func GetAllPembayaran(c *fiber.Ctx) error {
 func GetPembayaranByID(c *fiber.Ctx) error {
 	collection := config.DB.Collection("pembayarans")
 	id := c.Params("id")
+
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid ObjectID format"})
+	}
+
 	var pembayaran models.Pembayaran
-	err := collection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&pembayaran)
+	err = collection.FindOne(context.TODO(), bson.M{"_id": objectID}).Decode(&pembayaran)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Pembayaran not found"})
 	}
 	return c.JSON(pembayaran)
+}
+
+func GetPembayaranByUserID(c *fiber.Ctx) error {
+	collection := config.DB.Collection("pembayarans")
+	userID := c.Params("user_id")
+
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid User ObjectID format"})
+	}
+
+	cursor, err := collection.Find(context.TODO(), bson.M{"user_id": objectID})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch user payments"})
+	}
+	defer cursor.Close(context.TODO())
+
+	var pembayarans []models.Pembayaran
+	if err = cursor.All(context.TODO(), &pembayarans); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to decode user payments"})
+	}
+
+	return c.JSON(pembayarans)
 }
 
 func CreatePembayaran(c *fiber.Ctx) error {

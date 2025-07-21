@@ -26,6 +26,11 @@ import (
 
 // @host localhost:3000
 // @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 // @schemes http
 
 func main() {
@@ -38,7 +43,7 @@ func main() {
 	app.Use(logger.New())
 
 	// Swagger endpoint
-	app.Get("/swagger/*", fiberSwagger.WrapHandler)
+	app.Get("/docs/*", fiberSwagger.WrapHandler)
 
 	routes.SetupRoutes(app)
 

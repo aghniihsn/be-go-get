@@ -113,13 +113,31 @@ func UpdateUser(c *fiber.Ctx) error {
 	if input.Role != "" && currentUser.Role == "admin" {
 		updateData["role"] = input.Role
 	}
+	if input.Firstname != "" {
+		updateData["firstname"] = input.Firstname
+	}
+	if input.Lastname != "" {
+		updateData["lastname"] = input.Lastname
+	}
+	if input.Gender != "" {
+		updateData["gender"] = input.Gender
+	}
+	if input.PhoneNumber != "" {
+		updateData["phone_number"] = input.PhoneNumber
+	}
+	if input.ProfilePictureURL != "" {
+		updateData["profile_picture_url"] = input.ProfilePictureURL
+	}
+	if input.Address != "" {
+		updateData["address"] = input.Address
+	}
 
 	// Add updated timestamp
 	updateData["updated_at"] = time.Now()
 
 	update := bson.M{"$set": updateData}
 
-	res, err := userCollection.UpdateOne(context.TODO(), bson.M{"id": userID}, update)
+	res, err := userCollection.UpdateOne(context.TODO(), bson.M{"_id": userID}, update)
 	if err != nil || res.MatchedCount == 0 {
 		return c.Status(404).JSON(fiber.Map{"error": "Update failed"})
 	}

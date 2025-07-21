@@ -8,13 +8,19 @@ import (
 
 // User represents user data structure
 type User struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Username  string             `json:"username" bson:"username"`
-	Email     string             `json:"email" bson:"email"`
-	Password  string             `json:"password" bson:"password"`
-	Role      string             `json:"role" bson:"role"` // "user" or "admin"
-	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
+	ID                primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Username          string             `json:"username" bson:"username"`
+	Email             string             `json:"email" bson:"email"`
+	Password          string             `json:"password" bson:"password"`
+	Role              string             `json:"role" bson:"role"` // "user" or "admin"
+	Firstname         string             `json:"firstname" bson:"firstname"`
+	Lastname          string             `json:"lastname" bson:"lastname"`
+	Gender            string             `json:"gender" bson:"gender"`
+	PhoneNumber       string             `json:"phone_number" bson:"phone_number"`
+	ProfilePictureURL string             `json:"profile_picture_url" bson:"profile_picture_url"`
+	Address           string             `json:"address" bson:"address"`
+	CreatedAt         time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt         time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 // Film represents movie data structure
@@ -75,10 +81,16 @@ type UserLogin struct {
 
 // UserRegister represents registration request
 type UserRegister struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+	Username          string `json:"username"`
+	Email             string `json:"email"`
+	Password          string `json:"password"`
+	Role              string `json:"role"`
+	Firstname         string `json:"firstname"`
+	Lastname          string `json:"lastname"`
+	Gender            string `json:"gender"`
+	PhoneNumber       string `json:"phone_number"`
+	ProfilePictureURL string `json:"profile_picture_url"`
+	Address           string `json:"address"`
 }
 
 // JWTPayload represents JWT token payload

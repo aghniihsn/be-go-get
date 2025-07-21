@@ -19,16 +19,16 @@ func SetupRoutes(app *fiber.App) {
 	auth.Post("/register", controllers.Register)
 	auth.Post("/login", controllers.Login)
 	auth.Get("/profile", middleware.AuthRequired(), controllers.GetProfile)
+	auth.Put("/profile", middleware.AuthRequired(), controllers.UpdateProfile)
 
 	// Public routes (no auth required)
-	// Films - public untuk melihat daftar film
 	api.Get("/films", controllers.GetAllFilms)
 	api.Get("/films/:id", controllers.GetFilmByID)
 
 	// Jadwals - public untuk melihat jadwal
 	api.Get("/jadwals", controllers.GetAllJadwals)
+	api.Get("/jadwals/detail", controllers.GetAllJadwalsWithFilm)
 	api.Get("/jadwals/:id", controllers.GetJadwalByID)
-	app.Get("/jadwals/detail", controllers.GetAllJadwalsWithFilm)
 	api.Get("/jadwals/film/:filmId", controllers.GetJadwalsByFilmID)
 
 	// Protected routes - require authentication
@@ -46,6 +46,7 @@ func SetupRoutes(app *fiber.App) {
 
 	// Pembayaran routes (authenticated users)
 	protected.Get("/pembayarans/:id", controllers.GetPembayaranByID)
+	protected.Get("/pembayarans/user/:user_id", controllers.GetPembayaranByUserID)
 	protected.Post("/pembayarans", controllers.CreatePembayaran)
 	protected.Put("/pembayarans/:id", controllers.UpdatePembayaran)
 
