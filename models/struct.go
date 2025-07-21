@@ -8,7 +8,7 @@ import (
 
 // User represents user data structure
 type User struct {
-	ID                primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID                primitive.ObjectID `json:"-" bson:"_id,omitempty"`
 	Username          string             `json:"username" bson:"username"`
 	Email             string             `json:"email" bson:"email"`
 	Password          string             `json:"password" bson:"password"`
@@ -19,22 +19,30 @@ type User struct {
 	PhoneNumber       string             `json:"phone_number" bson:"phone_number"`
 	ProfilePictureURL string             `json:"profile_picture_url" bson:"profile_picture_url"`
 	Address           string             `json:"address" bson:"address"`
-	CreatedAt         time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt         time.Time          `json:"updated_at" bson:"updated_at"`
+	CreatedAt         time.Time          `json:"-" bson:"created_at"`
+	UpdatedAt         time.Time          `json:"-" bson:"updated_at"`
 }
 
 // Film represents movie data structure
 type Film struct {
-	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID          primitive.ObjectID `json:"-" bson:"_id,omitempty"`
 	Title       string             `json:"title" bson:"title"`
-	Genre       string             `json:"genre" bson:"genre"`
+	Genre       []string           `json:"genre" bson:"genre"`
 	Duration    int                `json:"duration" bson:"duration"` // in minutes
 	Rating      string             `json:"rating" bson:"rating"`
 	Description string             `json:"description" bson:"description"`
 	PosterURL   string             `json:"poster_url" bson:"poster_url"`
-	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
+	CreatedAt   time.Time          `json:"-" bson:"created_at"`
+	UpdatedAt   time.Time          `json:"-" bson:"updated_at"`
 }
+
+// Enum untuk rating film dalam bahasa Indonesia
+const (
+	RatingSemua  = "Semua Umur"
+	RatingAnak   = "Anak-anak"
+	RatingRemaja = "Remaja"
+	RatingDewasa = "Dewasa"
+)
 
 // Jadwal represents movie schedule data structure
 type Jadwal struct {
@@ -64,7 +72,6 @@ type Tiket struct {
 type Pembayaran struct {
 	ID                primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	TiketID           primitive.ObjectID `json:"tiket_id" bson:"tiket_id"`
-	UserID            primitive.ObjectID `json:"user_id" bson:"user_id"`
 	Jumlah            float64            `json:"jumlah" bson:"jumlah"`
 	MetodePembayaran  string             `json:"metode_pembayaran" bson:"metode_pembayaran"`
 	Status            string             `json:"status" bson:"status"` // "pending", "completed", "failed"

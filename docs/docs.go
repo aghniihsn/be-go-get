@@ -80,67 +80,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/auth/profile": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update authenticated user's profile",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Update own user profile",
-                "parameters": [
-                    {
-                        "description": "User profile update data",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.User"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
         "/api/auth/register": {
             "post": {
                 "description": "Register a new user (user or admin)",
@@ -223,6 +162,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new film in the cinema",
                 "consumes": [
                     "application/json"
@@ -247,21 +191,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "{ 'message': 'Film created successfully', 'film': { ...film fields... } }",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "{ 'error': 'Invalid input' }",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "{ 'error': 'Internal server error' }",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -309,6 +253,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update film by ID",
                 "consumes": [
                     "application/json"
@@ -340,21 +289,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "{ 'message': 'Film updated successfully' }",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "{ 'error': 'Invalid input' }",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "{ 'error': 'Film not found or update failed' }",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -363,6 +312,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete film by ID",
                 "consumes": [
                     "application/json"
@@ -504,12 +458,6 @@ const docTemplate = `{
         "models.Film": {
             "type": "object",
             "properties": {
-                "_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -518,7 +466,10 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "genre": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "poster_url": {
                     "type": "string"
@@ -528,22 +479,13 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
                 }
             }
         },
         "models.User": {
             "type": "object",
             "properties": {
-                "_id": {
-                    "type": "string"
-                },
                 "address": {
-                    "type": "string"
-                },
-                "created_at": {
                     "type": "string"
                 },
                 "email": {
@@ -569,9 +511,6 @@ const docTemplate = `{
                 },
                 "role": {
                     "description": "\"user\" or \"admin\"",
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 },
                 "username": {

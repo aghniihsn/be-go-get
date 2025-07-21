@@ -2,33 +2,25 @@ basePath: /
 definitions:
   models.Film:
     properties:
-      _id:
-        type: string
-      created_at:
-        type: string
       description:
         type: string
       duration:
         description: in minutes
         type: integer
       genre:
-        type: string
+        items:
+          type: string
+        type: array
       poster_url:
         type: string
       rating:
         type: string
       title:
         type: string
-      updated_at:
-        type: string
     type: object
   models.User:
     properties:
-      _id:
-        type: string
       address:
-        type: string
-      created_at:
         type: string
       email:
         type: string
@@ -46,8 +38,6 @@ definitions:
         type: string
       role:
         description: '"user" or "admin"'
-        type: string
-      updated_at:
         type: string
       username:
         type: string
@@ -134,46 +124,6 @@ paths:
       summary: Login user
       tags:
       - Auth
-  /api/auth/profile:
-    put:
-      consumes:
-      - application/json
-      description: Update authenticated user's profile
-      parameters:
-      - description: User profile update data
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.User'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Update own user profile
-      tags:
-      - Auth
   /api/auth/register:
     post:
       consumes:
@@ -244,20 +194,23 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: '{ ''message'': ''Film created successfully'', ''film'': {
+            ...film fields... } }'
           schema:
             additionalProperties: true
             type: object
         "400":
-          description: Bad Request
+          description: '{ ''error'': ''Invalid input'' }'
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: '{ ''error'': ''Internal server error'' }'
           schema:
             additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: Create a new film
       tags:
       - Films
@@ -285,6 +238,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: Delete a film
       tags:
       - Films
@@ -333,20 +288,22 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: '{ ''message'': ''Film updated successfully'' }'
           schema:
             additionalProperties: true
             type: object
         "400":
-          description: Bad Request
+          description: '{ ''error'': ''Invalid input'' }'
           schema:
             additionalProperties: true
             type: object
         "404":
-          description: Not Found
+          description: '{ ''error'': ''Film not found or update failed'' }'
           schema:
             additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: Update a film
       tags:
       - Films

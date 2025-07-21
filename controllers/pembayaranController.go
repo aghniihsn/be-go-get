@@ -115,7 +115,6 @@ func CreatePembayaran(c *fiber.Ctx) error {
 	pembayaran := models.Pembayaran{
 		ID:                primitive.NewObjectID(),
 		TiketID:           tiketID,
-		UserID:            userID,
 		Jumlah:            input.Jumlah,
 		MetodePembayaran:  input.MetodePembayaran,
 		Status:            input.Status,
@@ -153,7 +152,6 @@ func UpdatePembayaran(c *fiber.Ctx) error {
 	update := bson.M{
 		"$set": bson.M{
 			"tiket_id":           pembayaran.TiketID,
-			"user_id":            pembayaran.UserID,
 			"jumlah":             pembayaran.Jumlah,
 			"metode_pembayaran":  pembayaran.MetodePembayaran,
 			"status":             pembayaran.Status,

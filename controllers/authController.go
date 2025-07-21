@@ -218,20 +218,6 @@ func GetProfile(c *fiber.Ctx) error {
 	})
 }
 
-// UpdateProfile godoc
-// @Summary Update own user profile
-// @Description Update authenticated user's profile
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param user body models.User true "User profile update data"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 401 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
-// @Security BearerAuth
-// @Router /api/auth/profile [put]
-// UpdateProfile handles updating user profile
 func UpdateProfile(c *fiber.Ctx) error {
 	currentUser := c.Locals("user").(*models.JWTPayload)
 	userCollection := config.DB.Collection("users")
