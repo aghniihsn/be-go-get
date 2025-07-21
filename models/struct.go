@@ -6,6 +6,23 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Daftar kursi per studio (misal: 10 baris x 10 kolom)
+// CreateTiketRequest represents the request body for creating a ticket
+type CreateTiketRequest struct {
+	JadwalID string `json:"jadwal_id"`
+	UserID   string `json:"user_id"`
+	Kursi    string `json:"kursi"`
+	Status   string `json:"status"`
+}
+
+var StudioSeats = []string{
+	"A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10",
+	"B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10",
+	"C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10",
+	"D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10",
+	"E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10",
+}
+
 // User represents user data structure
 type User struct {
 	ID                primitive.ObjectID `json:"-" bson:"_id,omitempty"`
@@ -66,11 +83,18 @@ type Tiket struct {
 	UserID           primitive.ObjectID `json:"user_id" bson:"user_id"`
 	JadwalID         primitive.ObjectID `json:"jadwal_id" bson:"jadwal_id"`
 	Kursi            string             `json:"kursi" bson:"kursi"`
-	Status           string             `json:"status" bson:"status"` // "confirmed", "cancelled", "used"
+	Status           string             `json:"status" bson:"status"` // enum: TiketStatusConfirmed, TiketStatusCancelled, TiketStatusUsed
 	TanggalPembelian time.Time          `json:"tanggal_pembelian" bson:"tanggal_pembelian"`
 	CreatedAt        time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt        time.Time          `json:"updated_at" bson:"updated_at"`
 }
+
+// Enum status tiket
+const (
+	TiketStatusConfirmed = "confirmed"
+	TiketStatusCancelled = "cancelled"
+	TiketStatusUsed      = "used"
+)
 
 // Pembayaran represents payment data structure
 type Pembayaran struct {
@@ -78,11 +102,18 @@ type Pembayaran struct {
 	TiketID           primitive.ObjectID `json:"tiket_id" bson:"tiket_id"`
 	Jumlah            float64            `json:"jumlah" bson:"jumlah"`
 	MetodePembayaran  string             `json:"metode_pembayaran" bson:"metode_pembayaran"`
-	Status            string             `json:"status" bson:"status"` // "pending", "completed", "failed"
+	Status            string             `json:"status" bson:"status"` // enum: PembayaranStatusPending, PembayaranStatusCompleted, PembayaranStatusFailed
 	TanggalPembayaran time.Time          `json:"tanggal_pembayaran" bson:"tanggal_pembayaran"`
 	CreatedAt         time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt         time.Time          `json:"updated_at" bson:"updated_at"`
 }
+
+// Enum status pembayaran
+const (
+	PembayaranStatusPending   = "pending"
+	PembayaranStatusCompleted = "completed"
+	PembayaranStatusFailed    = "failed"
+)
 
 // UserLogin represents login request
 type UserLogin struct {

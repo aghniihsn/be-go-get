@@ -36,6 +36,26 @@ definitions:
         description: 'format: HH:MM'
         type: string
     type: object
+  models.Tiket:
+    properties:
+      _id:
+        type: string
+      created_at:
+        type: string
+      jadwal_id:
+        type: string
+      kursi:
+        type: string
+      status:
+        description: 'enum: TiketStatusConfirmed, TiketStatusCancelled, TiketStatusUsed'
+        type: string
+      tanggal_pembelian:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
   models.User:
     properties:
       address:
@@ -473,6 +493,233 @@ paths:
       summary: Update jadwal by ID
       tags:
       - Jadwal
+  /api/tikets:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Tiket'
+            type: array
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all tickets (admin only)
+      tags:
+      - Tiket
+    post:
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+  /api/tikets/{id}:
+    get:
+      parameters:
+      - description: Tiket ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Tiket'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get ticket by ID
+      tags:
+      - Tiket
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tiket ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tiket object
+        in: body
+        name: tiket
+        required: true
+        schema:
+          $ref: '#/definitions/models.Tiket'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update ticket (seat/status)
+      tags:
+      - Tiket
+  /api/tikets/batal/{id}:
+    put:
+      parameters:
+      - description: Tiket ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Cancel a ticket
+      tags:
+      - Tiket
+  /api/tikets/kursi-kosong/{jadwalId}:
+    get:
+      parameters:
+      - description: Jadwal ID
+        in: path
+        name: jadwalId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get available seats for a schedule
+      tags:
+      - Tiket
+  /api/tikets/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Tiket'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user's ticket history
+      tags:
+      - Tiket
+  /api/tikets/user/{user_id}:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Tiket'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get tickets by user ID (admin or self)
+      tags:
+      - Tiket
   /api/users/{id}:
     get:
       description: Get user information by ID (admin only or own profile)

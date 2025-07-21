@@ -42,7 +42,9 @@ func SetupRoutes(app *fiber.App) {
 	protected.Get("/tikets/user/:user_id", controllers.GetTiketByUserID)
 	protected.Post("/tikets", controllers.CreateTiket)
 	protected.Put("/tikets/:id", controllers.UpdateTiket)
-	protected.Delete("/tikets/:id", controllers.DeleteTiket)
+	protected.Delete("/tikets/:id", controllers.CancelTiket)
+	api.Get("/jadwals/:jadwal_id/kursi-kosong", controllers.GetKursiKosong)
+	protected.Get("/tikets/me", controllers.GetTiketUser)
 
 	// Pembayaran routes (authenticated users)
 	protected.Get("/pembayarans/:id", controllers.GetPembayaranByID)

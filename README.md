@@ -56,15 +56,22 @@ be-go-get/
 │   └── swagger.yaml         # OpenAPI specification (YAML)
 │
 └── scripts/
-    └── add-swagger.sh        # Swagger documentation setup script
+    ├── add-swagger.sh        # Swagger documentation setup script
+    ├── run-seeder.sh         # Database seeder script
+    ├── verify-seeder.sh      # Database verification script
+    ├── clear-database.sh     # Database clear script
+    └── seeder/              # Database seeder implementation
+        ├── main.go          # Seeder source code
+        └── go.mod           # Seeder dependencies
 ```
 
 ## 🚀 Features
 
 - **MongoDB ObjectID Integration**: Complete migration to MongoDB's ObjectID system for all entities
 - **JWT Authentication**: Secure token-based authentication with ObjectID support
-- **Comprehensive Testing**: 15+ test cases covering unit and integration testing
-- **API Documentation**: Complete Swagger/OpenAPI documentation
+- **Database Seeder**: Comprehensive data seeding with realistic sample data
+- **Comprehensive Testing**: 20+ test cases covering unit, integration, and database testing
+- **API Documentation**: Complete Swagger/OpenAPI documentation with ObjectID examples
 - **Clean Architecture**: Well-organized folder structure following Go best practices
 - **Security**: Password hashing with bcrypt and secure JWT implementation
 
@@ -98,16 +105,76 @@ be-go-get/
 
 3. **Configure environment variables**
    ```bash
-   # Set your MongoDB connection string
-   export MONGODB_URI="mongodb://localhost:27017"
-   export DATABASE_NAME="cinema_booking"
-   export JWT_SECRET="your-secret-key"
+   # Create .env file
+   cp .env.example .env
+   
+   # Edit .env with your configurations
+   MONGOSTRING=mongodb+srv://username:password@cluster.mongodb.net/
+   PORT=3000
+   JWT_SECRET=your-jwt-secret-key
+   ENV=development
    ```
 
-4. **Run the application**
+4. **Populate database with sample data**
+   ```bash
+   # Run database seeder to populate with sample data
+   ./scripts/run-seeder.sh
+   
+   # Verify seeder results
+   ./scripts/verify-seeder.sh
+   ```
+
+5. **Run the application**
    ```bash
    go run main.go
    ```
+
+## 🌱 Database Seeder
+
+The project includes a comprehensive database seeder that populates your MongoDB with realistic sample data for testing and development.
+
+### 🎯 What Gets Seeded
+
+- **5 Users**: 1 admin + 4 regular users
+- **6 Films**: Popular movies with complete metadata
+- **18 Schedules**: Multiple showtimes for each film
+- **8 Tickets**: Sample bookings with different statuses
+- **6 Payments**: Payment records for confirmed tickets
+
+### 🚀 Running the Seeder
+
+```bash
+# Quick start - run seeder with all sample data
+./scripts/run-seeder.sh
+
+# Verify the seeded data
+./scripts/verify-seeder.sh
+
+# Clear database (if needed)
+./scripts/clear-database.sh
+```
+
+### 🔐 Test Credentials
+
+After seeding, you can use these credentials for testing:
+
+```json
+// Admin Login
+{
+  "email": "admin@cinema.com",
+  "password": "admin123"
+}
+
+// Regular User Login
+{
+  "email": "john@example.com", 
+  "password": "password123"
+}
+```
+
+### 📚 Seeder Documentation
+
+For detailed seeder documentation, see: [`docs/guide_ai/README_SEEDER.md`](docs/guide_ai/README_SEEDER.md)
 
 ## 🧪 Testing
 
@@ -311,16 +378,6 @@ curl -X POST http://localhost:3000/api/tikets \
 ```bash
 swag init
 ```
-
-### Environment Variables
-```env
-MONGOSTRING=mongodb+srv://...
-MIDTRANS_SERVER_KEY=SB-Mid-server-...
-MIDTRANS_CLIENT_KEY=SB-Mid-client-...
-MIDTRANS_ENVIRONMENT=sandbox
-```
-
-## Database Schema
 
 ### Collections
 - **films**: Film information
