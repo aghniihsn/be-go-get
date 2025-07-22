@@ -1,295 +1,174 @@
-# Go Backend API - Cinema Ticket Booking System
+# GoGetCinema - Cinema Booking API Backend
 
-A comprehensive RESTful API backend service for cinema ticket booking system built with Go, featuring MongoDB ObjectID integration, JWT authentication, and extensive testing coverage.
+GoGetCinema adalah sistem backend RESTful API untuk layanan pemesanan tiket bioskop online. Dibangun dengan Go dan Fiber framework, menggunakan MongoDB sebagai basis data, dan JWT untuk autentikasi.
 
-## 🏗️ Project Structure
+## 📋 Daftar Isi
+- [Fitur Utama](#fitur-utama)
+- [Alur Bisnis](#alur-bisnis)
+- [Struktur Proyek](#struktur-proyek)
+- [Spesifikasi API](#spesifikasi-api)
+- [Teknologi](#teknologi)
+
+## 🚀 Fitur Utama
+
+### 🔐 Autentikasi & Manajemen Pengguna
+- Registrasi dan login pengguna
+- Autentikasi berbasis JWT
+- Manajemen profil pengguna
+- Kontrol akses berbasis peran (user/admin)
+
+### 🎬 Manajemen Film
+- Pengelolaan data film (CRUD)
+- Kategorisasi film berdasarkan genre
+- Sistem rating film (Semua Umur, Anak-anak, Remaja, Dewasa)
+- Informasi film lengkap dengan deskripsi dan poster
+
+### 📅 Manajemen Jadwal
+- Pengelolaan jadwal tayang (CRUD)
+- Filter jadwal berdasarkan film, tanggal, dan waktu
+- Penempatan studio/ruangan
+- Konfigurasi harga untuk setiap jadwal
+
+### 🎟️ Sistem Tiket
+- Pemesanan tiket individual
+- Pemesanan tiket batch untuk multiple kursi
+- Pengecekan ketersediaan kursi
+- Manajemen status tiket (confirmed, cancelled, used)
+- Informasi tiket detail dengan data film dan jadwal
+
+### 💰 Sistem Pembayaran
+- Dukungan berbagai metode pembayaran
+- Pelacakan status pembayaran (pending, completed, failed)
+- Unggah bukti pembayaran
+- Sistem konfirmasi pembayaran
+- Update status tiket otomatis setelah pembayaran berhasil
+
+## 🔄 Alur Bisnis
+
+### Alur Pengguna Reguler:
+1. **Pendaftaran & Login**
+   - Pengguna mendaftar dengan username, email, dan password
+   - Login untuk mendapatkan token JWT
+
+2. **Penelusuran Film & Jadwal**
+   - Lihat daftar film yang tersedia
+   - Pilih film dan lihat jadwal tayang
+   - Cek ketersediaan kursi untuk jadwal tertentu
+
+3. **Pemesanan Tiket**
+   - Pilih satu atau beberapa kursi
+   - Buat tiket untuk jadwal yang dipilih
+   - Tiket memiliki status "confirmed" setelah dibuat
+
+4. **Pembayaran**
+   - Pilih metode pembayaran
+   - Lakukan pembayaran dan upload bukti pembayaran
+   - Admin memverifikasi pembayaran
+   - Status pembayaran diubah menjadi "completed"
+
+5. **Manajemen Tiket**
+   - Lihat tiket yang telah dipesan
+   - Lihat detail tiket dengan info film dan jadwal
+   - Batal tiket jika diperlukan (sebelum digunakan)
+
+### Alur Admin:
+1. **Manajemen Film**
+   - Tambah, edit, hapus data film
+   - Kelola informasi dan kategori film
+
+2. **Manajemen Jadwal**
+   - Buat jadwal baru untuk film
+   - Atur studio dan harga tiket
+   - Edit atau hapus jadwal yang sudah ada
+
+3. **Verifikasi Pembayaran**
+   - Tinjau pembayaran yang masuk
+   - Verifikasi bukti pembayaran
+   - Update status pembayaran
+
+4. **Manajemen Tiket**
+   - Lihat semua tiket dalam sistem
+   - Filter tiket berdasarkan status atau pengguna
+   - Cancel tiket jika diperlukan
+
+## 📁 Struktur Proyek
 
 ```
 be-go-get/
-├── main.go                     # Application entry point
-├── go.mod                      # Go module dependencies
-├── go.sum                      # Go module checksums
-├── Makefile                    # Build and deployment scripts
+├── main.go                     # Entry point aplikasi
+├── go.mod                      # Dependensi Go module
+├── go.sum                      # Checksum Go module
+├── Makefile                    # Script build dan deployment
 │
-├── config/
-│   └── database.go            # Database configuration and connection
+├── config/                     # Konfigurasi aplikasi
+│   ├── database.go             # Konfigurasi dan koneksi database
+│   ├── cors.go                 # Konfigurasi CORS
+│   └── middleware/             # Middleware aplikasi
+│       ├── auth.go             # Autentikasi JWT
+│       └── encoder.go          # Utilitas encoding
 │
-├── controllers/               # HTTP request handlers
-│   ├── filmController.go      # Film management endpoints
-│   ├── jadwalController.go    # Schedule management endpoints
-│   ├── pembayaranController.go # Payment processing endpoints
-│   ├── tiketController.go     # Ticket booking endpoints
-│   └── userController.go      # User authentication endpoints
+├── controllers/                # Handler request HTTP
+│   ├── authController.go       # Endpoint autentikasi
+│   ├── filmController.go       # Endpoint manajemen film
+│   ├── jadwalController.go     # Endpoint manajemen jadwal
+│   ├── pembayaranController.go # Endpoint pemrosesan pembayaran
+│   ├── tiketController.go      # Endpoint pemesanan tiket
+│   ├── batchController.go      # Endpoint untuk operasi batch
+│   └── userController.go       # Endpoint manajemen pengguna
 │
-├── middlewares/
-│   └── middleware.go          # JWT authentication middleware
+├── models/                     # Struktur data
+│   ├── struct.go               # Struktur utama dengan MongoDB ObjectID
+│   └── request.go              # Model untuk request API
 │
-├── models/
-│   └── struct.go             # Data structures with MongoDB ObjectID
-│
-├── routes/
-│   └── router.go             # API route definitions
-│
-├── tests/
-│   ├── unit/                 # Unit tests for core functionality
-│   │   ├── objectid_test.go  # ObjectID validation and generation tests
-│   │   ├── password_test.go  # Password hashing security tests
-│   │   ├── jwt_test.go       # JWT token authentication tests
-│   │   └── controller_logic_test.go # Business logic validation tests
-│   │
-│   ├── integration/          # Integration tests for API endpoints
-│   │   ├── auth_controller_test.go    # Authentication flow tests
-│   │   ├── crud_controller_test.go    # CRUD operations tests
-│   │   ├── payment_controller_test.go # Payment processing tests
-│   │   └── api_test.go               # End-to-end API tests
-│   │
-│   └── mocks/
-│       └── test_data.go      # Test helper functions and mock data
-│
-├── docs/                     # Project documentation
-│   ├── TESTING_PLAN.md       # Comprehensive testing strategy
-│   ├── TEST_REPORT.md        # Testing results and analysis
-│   ├── CONTROLLER_TEST_REPORT.md # Controller-specific test documentation
-│   ├── README_POSTMAN.md     # API usage examples and Postman collection
-│   ├── docs.go              # Swagger documentation generator
-│   ├── swagger.json         # OpenAPI specification
-│   └── swagger.yaml         # OpenAPI specification (YAML)
-│
-└── scripts/
-    ├── add-swagger.sh        # Swagger documentation setup script
-    ├── run-seeder.sh         # Database seeder script
-    ├── verify-seeder.sh      # Database verification script
-    ├── clear-database.sh     # Database clear script
-    └── seeder/              # Database seeder implementation
-        ├── main.go          # Seeder source code
-        └── go.mod           # Seeder dependencies
-```
+## 📡 Spesifikasi API
 
-## 🚀 Features
+### Rute Publik
+- `GET /api/films` - Mendapatkan semua film
+- `GET /api/films/:id` - Mendapatkan film berdasarkan ID
+- `GET /api/jadwals` - Mendapatkan semua jadwal
+- `GET /api/jadwals/detail` - Mendapatkan semua jadwal dengan detail film
+- `GET /api/jadwals/:id` - Mendapatkan jadwal berdasarkan ID
+- `GET /api/jadwals/film/:filmId` - Mendapatkan jadwal berdasarkan ID film
+- `GET /api/jadwals/:jadwal_id/kursi-kosong` - Mendapatkan kursi yang tersedia untuk suatu jadwal
+- `GET /api/payment-methods` - Mendapatkan metode pembayaran yang tersedia
 
-- **MongoDB ObjectID Integration**: Complete migration to MongoDB's ObjectID system for all entities
-- **JWT Authentication**: Secure token-based authentication with ObjectID support
-- **Database Seeder**: Comprehensive data seeding with realistic sample data
-- **Comprehensive Testing**: 20+ test cases covering unit, integration, and database testing
-- **API Documentation**: Complete Swagger/OpenAPI documentation with ObjectID examples
-- **Clean Architecture**: Well-organized folder structure following Go best practices
-- **Security**: Password hashing with bcrypt and secure JWT implementation
+### Rute Autentikasi
+- `POST /api/auth/register` - Registrasi pengguna baru
+- `POST /api/auth/login` - Login pengguna
+- `GET /api/auth/profile` - Mendapatkan profil pengguna
+- `PUT /api/auth/profile` - Update profil pengguna
 
-## 🛠️ Technologies
+### Rute Pengguna Terotentikasi
+- `GET /api/tikets/me` - Mendapatkan tiket milik pengguna
+- `GET /api/tikets/:id/summary` - Mendapatkan informasi detail tiket
+- `POST /api/tikets` - Membuat tiket tunggal
+- `POST /api/tikets/batch` - Membuat multiple tiket sekaligus
+- `PUT /api/tikets/:id` - Update tiket
+- `DELETE /api/tikets/:id` - Membatalkan tiket
+- `GET /api/pembayarans/:id` - Mendapatkan pembayaran berdasarkan ID
+- `GET /api/pembayarans/user/:user_id` - Mendapatkan pembayaran berdasarkan ID pengguna
+- `POST /api/pembayarans` - Membuat pembayaran baru
+- `PUT /api/pembayarans/:id` - Update status pembayaran
 
-- **Language**: Go 1.21+
-- **Database**: MongoDB with primitive.ObjectID
-- **Authentication**: JWT (JSON Web Tokens)
-- **Testing**: Go testing framework with testify assertions
-- **Documentation**: Swagger/OpenAPI 3.0
-- **Security**: bcrypt password hashing
+### Rute Admin
+- `POST /api/films` - Membuat film baru
+- `PUT /api/films/:id` - Update film
+- `DELETE /api/films/:id` - Menghapus film
+- `POST /api/jadwals` - Membuat jadwal baru
+- `PUT /api/jadwals/:id` - Update jadwal
+- `DELETE /api/jadwals/:id` - Menghapus jadwal
+- `GET /api/tikets` - Mendapatkan semua tiket
+- `GET /api/tikets/:id` - Mendapatkan tiket berdasarkan ID
+- `GET /api/pembayarans` - Mendapatkan semua pembayaran
+- `DELETE /api/pembayarans/:id` - Menghapus pembayaran
 
-## 📋 Prerequisites
+## 🔧 Teknologi
 
-- Go 1.21 or higher
-- MongoDB instance
-- Git
-
-## 🔧 Installation & Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd be-go-get
-   ```
-
-2. **Install dependencies**
-   ```bash
-   go mod download
-   ```
-
-3. **Configure environment variables**
-   ```bash
-   # Create .env file
-   cp .env.example .env
-   
-   # Edit .env with your configurations
-   MONGOSTRING=mongodb+srv://username:password@cluster.mongodb.net/
-   PORT=3000
-   JWT_SECRET=your-jwt-secret-key
-   ENV=development
-   ```
-
-4. **Populate database with sample data**
-   ```bash
-   # Run database seeder to populate with sample data
-   ./scripts/run-seeder.sh
-   
-   # Verify seeder results
-   ./scripts/verify-seeder.sh
-   ```
-
-5. **Run the application**
-   ```bash
-   go run main.go
-   ```
-
-## 🌱 Database Seeder
-
-The project includes a comprehensive database seeder that populates your MongoDB with realistic sample data for testing and development.
-
-### 🎯 What Gets Seeded
-
-- **5 Users**: 1 admin + 4 regular users
-- **6 Films**: Popular movies with complete metadata
-- **18 Schedules**: Multiple showtimes for each film
-- **8 Tickets**: Sample bookings with different statuses
-- **6 Payments**: Payment records for confirmed tickets
-
-### 🚀 Running the Seeder
-
-```bash
-# Quick start - run seeder with all sample data
-./scripts/run-seeder.sh
-
-# Verify the seeded data
-./scripts/verify-seeder.sh
-
-# Clear database (if needed)
-./scripts/clear-database.sh
-```
-
-### 🔐 Test Credentials
-
-After seeding, you can use these credentials for testing:
-
-```json
-// Admin Login
-{
-  "email": "admin@cinema.com",
-  "password": "admin123"
-}
-
-// Regular User Login
-{
-  "email": "john@example.com", 
-  "password": "password123"
-}
-```
-
-### 📚 Seeder Documentation
-
-For detailed seeder documentation, see: [`docs/guide_ai/README_SEEDER.md`](docs/guide_ai/README_SEEDER.md)
-
-## 🧪 Testing
-
-The project includes comprehensive testing coverage with both unit and integration tests.
-
-### Run All Tests
-```bash
-# Run all tests
-go test ./tests/...
-
-# Run with verbose output
-go test -v ./tests/...
-```
-
-### Run Specific Test Suites
-```bash
-# Unit tests only
-go test -v ./tests/unit/
-
-# Integration tests only
-go test -v ./tests/integration/
-```
-
-### Test Coverage
-```bash
-# Generate test coverage report
-go test -cover ./tests/...
-
-# Generate detailed coverage report
-go test -coverprofile=coverage.out ./tests/...
-go tool cover -html=coverage.out
-```
-
-## 📚 API Documentation
-
-### Access Swagger Documentation
-Once the server is running, access the interactive API documentation at:
-```
-http://localhost:8080/swagger/index.html
-```
-
-### Core Endpoints
-
-#### Authentication
-- `POST /api/register` - User registration
-- `POST /api/login` - User login
-
-#### Films
-- `GET /api/films` - Get all films
-- `POST /api/films` - Create new film (admin)
-- `GET /api/films/{id}` - Get film by ObjectID
-- `PUT /api/films/{id}` - Update film (admin)
-- `DELETE /api/films/{id}` - Delete film (admin)
-
-#### Schedules (Jadwal)
-- `GET /api/jadwal` - Get all schedules
-- `POST /api/jadwal` - Create new schedule (admin)
-- `GET /api/jadwal/{id}` - Get schedule by ObjectID
-
-#### Tickets
-- `POST /api/tiket` - Book ticket
-- `GET /api/tiket/user/{user_id}` - Get user tickets
-
-#### Payments
-- `POST /api/pembayaran` - Process payment
-- `GET /api/pembayaran/{id}` - Get payment details
-
-## 🔐 Security Features
-
-- **Password Security**: bcrypt hashing with salt rounds
-- **JWT Authentication**: Secure token-based authentication
-- **ObjectID Validation**: Proper MongoDB ObjectID validation
-- **Input Validation**: Comprehensive input validation for all endpoints
-
-## 🧪 Testing Strategy
-
-The testing approach includes:
-
-1. **Unit Tests**: Core functionality validation
-   - ObjectID generation and validation
-   - Password hashing security
-   - JWT token operations
-   - Business logic validation
-
-2. **Integration Tests**: End-to-end workflow testing
-   - Authentication flows
-   - CRUD operations with ObjectID
-   - Payment processing
-   - API endpoint validation
-
-3. **Performance Tests**: ObjectID operation benchmarks
-
-## 📁 Key Data Models
-
-All models use MongoDB ObjectID for consistency and performance:
-
-```go
-type User struct {
-    ID       primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-    Username string            `json:"username" bson:"username"`
-    Email    string            `json:"email" bson:"email"`
-    Password string            `json:"password" bson:"password"`
-    Role     string            `json:"role" bson:"role"`
-}
-
-type Film struct {
-    ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-    Title       string            `json:"title" bson:"title"`
-    Description string            `json:"description" bson:"description"`
-    Duration    int              `json:"duration" bson:"duration"`
-    Genre       string           `json:"genre" bson:"genre"`
-}
-
-// Additional models: Jadwal, Tiket, Pembayaran
-```
+- **Bahasa**: [Go](https://golang.org/)
+- **Framework Web**: [Fiber](https://gofiber.io/)
+- **Database**: [MongoDB](https://www.mongodb.com/)
+- **Autentikasi**: [JWT](https://jwt.io/)
+- **Dokumentasi API**: [Swagger](https://swagger.io/)
 
 ## 🚀 Development
 
@@ -310,74 +189,11 @@ make run
 4. Update documentation as needed
 5. Submit a pull request
 
-## 📝 Documentation
-
-Detailed documentation is available in the `docs/` folder:
-
-- **TESTING_PLAN.md**: Complete testing strategy and methodology
-- **TEST_REPORT.md**: Testing results and coverage analysis
-- **CONTROLLER_TEST_REPORT.md**: Controller-specific test documentation
-- **README_POSTMAN.md**: API usage examples and Postman collection
-
-## 🔍 Monitoring & Debugging
 
 - Use `go test -v` for detailed test output
 - Check logs for ObjectID validation errors
 - Monitor JWT token expiration and refresh
 - Validate MongoDB ObjectID format in API requests
-
-## 📈 Performance
-
-- ObjectID operations are optimized for MongoDB performance
-- JWT tokens include ObjectID-to-string conversion for compatibility
-- Test benchmarks ensure efficient ObjectID handling
-
-## 🤝 Support
-
-For issues and questions:
-1. Check the documentation in `docs/`
-2. Review test cases for usage examples
-3. Validate ObjectID format requirements
-4. Ensure proper JWT authentication headers
-
----
-
-**Note**: This project has undergone complete ObjectID migration and includes comprehensive testing coverage to ensure reliability and maintainability.
-    "duration": 181
-  }'
-```
-
-#### Get All Films
-```bash
-curl -X GET http://localhost:3000/api/films
-```
-
-#### Book Ticket
-```bash
-curl -X POST http://localhost:3000/api/tikets \
-  -H "Content-Type: application/json" \
-  -d '{
-    "id": "tiket001",
-    "jadwal_id": "jadwal001",
-    "nama": "John Doe",
-    "email": "john@example.com",
-    "jumlah": 2,
-    "user_id": "user001"
-  }'
-```
-
-## Development
-
-### Setup
-1. Clone repository
-2. Install dependencies: `go mod tidy`
-3. Setup environment variables in `.env`
-4. Run: `go run main.go`
-
-### Generate Swagger Docs
-```bash
-swag init
-```
 
 ### Collections
 - **films**: Film information
@@ -386,9 +202,3 @@ swag init
 - **users**: User accounts
 - **pembayarans**: Payment records
 
-## Contributing
-1. Fork the repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Create Pull Request

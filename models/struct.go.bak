@@ -6,6 +6,39 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Daftar kursi// Pembayaran represents payment data structure
+// swagger:model Pembayaran
+type Pembayaran struct {
+	// The unique identifier of the payment
+	// example: 60d21b4667d0d8992e610c88
+	ID primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	// The ID of the ticket associated with this payment
+	// example: 60d21b4667d0d8992e610c86
+	TiketID primitive.ObjectID `json:"tiket_id" bson:"tiket_id"`
+	// The payment amount
+	// example: 50000
+	Jumlah float64 `json:"jumlah" bson:"jumlah"`
+	// The payment method used
+	// example: transfer_bank
+	MetodePembayaran string `json:"metode_pembayaran" bson:"metode_pembayaran"`
+	// The payment status (pending, completed, failed)
+	// enum: pending,completed,failed
+	// example: completed
+	Status string `json:"status" bson:"status"`
+	// URL or base64 of payment proof (optional)
+	// example: https://example.com/payment-proof.jpg
+	BuktiPembayaran string `json:"bukti_pembayaran,omitempty" bson:"bukti_pembayaran,omitempty"`
+	// The date and time when the payment was made
+	// example: 2025-07-22T15:04:05Z
+	TanggalPembayaran time.Time `json:"tanggal_pembayaran" bson:"tanggal_pembayaran"`
+	// The record creation timestamp
+	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+	// The record last update timestamp
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
+}
+
+// Daftar kursi per studio (misal: 10 baris x 10 kolom)
+// CreateTiketRequest represents the request body for creating a ticket
 type CreateTiketRequest struct {
 	JadwalID string `json:"jadwal_id"`
 	UserID   string `json:"user_id"`
@@ -21,12 +54,13 @@ var StudioSeats = []string{
 	"E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10",
 }
 
+// User represents user data structure
 type User struct {
 	ID                primitive.ObjectID `json:"-" bson:"_id,omitempty"`
 	Username          string             `json:"username" bson:"username"`
 	Email             string             `json:"email" bson:"email"`
 	Password          string             `json:"password" bson:"password"`
-	Role              string             `json:"role" bson:"role"`
+	Role              string             `json:"role" bson:"role"` // "user" or "admin"
 	Firstname         string             `json:"firstname" bson:"firstname"`
 	Lastname          string             `json:"lastname" bson:"lastname"`
 	Gender            string             `json:"gender" bson:"gender"`
@@ -37,11 +71,12 @@ type User struct {
 	UpdatedAt         time.Time          `json:"-" bson:"updated_at"`
 }
 
+// Film represents movie data structure
 type Film struct {
 	ID          primitive.ObjectID `json:"-" bson:"_id,omitempty"`
 	Title       string             `json:"title" bson:"title"`
 	Genre       []string           `json:"genre" bson:"genre"`
-	Duration    int                `json:"duration" bson:"duration"`
+	Duration    int                `json:"duration" bson:"duration"` // in minutes
 	Rating      string             `json:"rating" bson:"rating"`
 	Description string             `json:"description" bson:"description"`
 	PosterURL   string             `json:"poster_url" bson:"poster_url"`
@@ -49,6 +84,7 @@ type Film struct {
 	UpdatedAt   time.Time          `json:"-" bson:"updated_at"`
 }
 
+// Enum untuk rating film dalam bahasa Indonesia
 const (
 	RatingSemua  = "Semua Umur"
 	RatingAnak   = "Anak-anak"
@@ -56,29 +92,48 @@ const (
 	RatingDewasa = "Dewasa"
 )
 
+// Jadwal represents movie schedule data structure
 type Jadwal struct {
 	ID        primitive.ObjectID `json:"-" bson:"_id,omitempty"`
 	FilmID    primitive.ObjectID `json:"film_id" bson:"film_id"`
 	FilmTitle string             `json:"film_title" bson:"film_title"`
-	Tanggal   string             `json:"tanggal" bson:"tanggal"`
-	Waktu     string             `json:"waktu" bson:"waktu"`
-	Ruangan   string             `json:"ruangan" bson:"ruangan"`
+	Tanggal   string             `json:"tanggal" bson:"tanggal"` // format: YYYY-MM-DD
+	Waktu     string             `json:"waktu" bson:"waktu"`     // format: HH:MM
+	Ruangan   string             `json:"ruangan" bson:"ruangan"` // enum: Studio 1-5
 	Harga     float64            `json:"harga" bson:"harga"`
 	CreatedAt time.Time          `json:"-" bson:"created_at"`
 	UpdatedAt time.Time          `json:"-" bson:"updated_at"`
 }
 
+// Enum daftar ruangan
 var ValidStudios = []string{"Studio 1", "Studio 2", "Studio 3", "Studio 4", "Studio 5"}
 
+// Tiket represents ticket data structure
+// swagger:model Tiket
 type Tiket struct {
-	ID               primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	UserID           primitive.ObjectID `json:"user_id" bson:"user_id"`
-	JadwalID         primitive.ObjectID `json:"jadwal_id" bson:"jadwal_id"`
-	Kursi            string             `json:"kursi" bson:"kursi"`
-	Status           string             `json:"status" bson:"status"`
-	TanggalPembelian time.Time          `json:"tanggal_pembelian" bson:"tanggal_pembelian"`
-	CreatedAt        time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt        time.Time          `json:"updated_at" bson:"updated_at"`
+	// The unique identifier of the ticket
+	// example: 60d21b4667d0d8992e610c86
+	ID primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	// The ID of the user who purchased the ticket
+	// example: 60d21b4667d0d8992e610c84
+	UserID primitive.ObjectID `json:"user_id" bson:"user_id"`
+	// The ID of the schedule associated with this ticket
+	// example: 60d21b4667d0d8992e610c85
+	JadwalID primitive.ObjectID `json:"jadwal_id" bson:"jadwal_id"`
+	// The seat code for this ticket
+	// example: A1
+	Kursi string `json:"kursi" bson:"kursi"`
+	// The ticket status (confirmed, cancelled, used)
+	// enum: confirmed,cancelled,used
+	// example: confirmed
+	Status string `json:"status" bson:"status"`
+	// The date and time when the ticket was purchased
+	// example: 2025-07-22T15:04:05Z
+	TanggalPembelian time.Time `json:"tanggal_pembelian" bson:"tanggal_pembelian"`
+	// The record creation timestamp
+	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+	// The record last update timestamp
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
 }
 
 // Enum status tiket
@@ -88,29 +143,33 @@ const (
 	TiketStatusUsed      = "used"
 )
 
+// Pembayaran represents payment data structure
 type Pembayaran struct {
 	ID                primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	TiketID           primitive.ObjectID `json:"tiket_id" bson:"tiket_id"`
 	Jumlah            float64            `json:"jumlah" bson:"jumlah"`
 	MetodePembayaran  string             `json:"metode_pembayaran" bson:"metode_pembayaran"`
-	Status            string             `json:"status" bson:"status"`
-	BuktiPembayaran   string             `json:"bukti_pembayaran,omitempty" bson:"bukti_pembayaran,omitempty"`
+	Status            string             `json:"status" bson:"status"`                                         // enum: PembayaranStatusPending, PembayaranStatusCompleted, PembayaranStatusFailed
+	BuktiPembayaran   string             `json:"bukti_pembayaran,omitempty" bson:"bukti_pembayaran,omitempty"` // URL or base64 of payment proof
 	TanggalPembayaran time.Time          `json:"tanggal_pembayaran" bson:"tanggal_pembayaran"`
 	CreatedAt         time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt         time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
+// Enum status pembayaran
 const (
 	PembayaranStatusPending   = "pending"
 	PembayaranStatusCompleted = "completed"
 	PembayaranStatusFailed    = "failed"
 )
 
+// UserLogin represents login request
 type UserLogin struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
+// UserRegister represents registration request
 type UserRegister struct {
 	Username          string `json:"username"`
 	Email             string `json:"email"`
@@ -124,6 +183,7 @@ type UserRegister struct {
 	Address           string `json:"address"`
 }
 
+// JWTPayload represents JWT token payload
 type JWTPayload struct {
 	ID       primitive.ObjectID `json:"id"`
 	Username string             `json:"username"`

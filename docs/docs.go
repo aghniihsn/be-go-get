@@ -581,6 +581,328 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/payment-methods": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pembayaran"
+                ],
+                "summary": "Get available payment methods",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.MetodePembayaran"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/pembayarans": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a list of all payment records",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pembayaran"
+                ],
+                "summary": "Get all payments (admin only)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Pembayaran"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new payment for a ticket",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pembayaran"
+                ],
+                "summary": "Create a new payment",
+                "parameters": [
+                    {
+                        "description": "Payment details",
+                        "name": "payment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/pembayarans/user/{user_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve payment history for a user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pembayaran"
+                ],
+                "summary": "Get all payments for a specific user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Pembayaran"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/pembayarans/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a specific payment",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pembayaran"
+                ],
+                "summary": "Get payment details by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Pembayaran"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update payment information including status and payment proof",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pembayaran"
+                ],
+                "summary": "Update payment status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payment update information",
+                        "name": "payment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "bukti_pembayaran": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permanently delete a payment record",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pembayaran"
+                ],
+                "summary": "Delete a payment (admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/tikets": {
             "get": {
                 "security": [
@@ -692,6 +1014,59 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tikets/batch": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tiket"
+                ],
+                "summary": "Create multiple tickets at once",
+                "parameters": [
+                    {
+                        "description": "Batch tickets request",
+                        "name": "batchRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateBatchTicketsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -934,6 +1309,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/tikets/{id}/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tiket"
+                ],
+                "summary": "Get detailed ticket information with film and jadwal details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tiket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.TicketSummary"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/users/{id}": {
             "get": {
                 "security": [
@@ -1034,29 +1456,54 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.CreateBatchTicketsRequest": {
+            "type": "object",
+            "properties": {
+                "jadwal_id": {
+                    "description": "The ID of the schedule for which tickets are being booked\nexample: 60d21b4667d0d8992e610c85",
+                    "type": "string"
+                },
+                "kursis": {
+                    "description": "Array of seat codes to book\nexample: [\"A1\", \"A2\", \"A3\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "user_id": {
+                    "description": "The ID of the user booking the tickets\nexample: 60d21b4667d0d8992e610c84",
+                    "type": "string"
+                }
+            }
+        },
         "models.Film": {
             "type": "object",
             "properties": {
                 "description": {
+                    "description": "Film description/synopsis\nexample: After the devastating events of Avengers: Infinity War...",
                     "type": "string"
                 },
                 "duration": {
-                    "description": "in minutes",
+                    "description": "Duration in minutes\nexample: 181",
                     "type": "integer"
                 },
                 "genre": {
+                    "description": "Film genres\nexample: [\"Action\", \"Adventure\", \"Sci-Fi\"]",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
                 "poster_url": {
+                    "description": "URL to film poster image\nexample: https://example.com/posters/avengers.jpg",
                     "type": "string"
                 },
                 "rating": {
+                    "description": "Film rating category\nexample: Remaja",
                     "type": "string"
                 },
                 "title": {
+                    "description": "Film title\nexample: Avengers: Endgame",
                     "type": "string"
                 }
             }
@@ -1065,25 +1512,160 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "film_id": {
+                    "description": "ID of the associated film\nexample: 60d21b4667d0d8992e610c90",
                     "type": "string"
                 },
                 "film_title": {
+                    "description": "Film title (denormalized for convenience)\nexample: Avengers: Endgame",
                     "type": "string"
                 },
                 "harga": {
+                    "description": "Ticket price\nexample: 50000",
                     "type": "number"
                 },
                 "ruangan": {
-                    "description": "enum: Studio 1-5",
+                    "description": "Theater room\nexample: Studio 3",
                     "type": "string"
                 },
                 "tanggal": {
-                    "description": "format: YYYY-MM-DD",
+                    "description": "Screening date in YYYY-MM-DD format\nexample: 2025-07-25",
                     "type": "string"
                 },
                 "waktu": {
-                    "description": "format: HH:MM",
+                    "description": "Screening time in HH:MM format\nexample: 19:30",
                     "type": "string"
+                }
+            }
+        },
+        "models.MetodePembayaran": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "A description of the payment method\nexample: Transfer ke rekening bank yang tersedia",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The payment method ID\nexample: transfer_bank",
+                    "type": "string"
+                },
+                "logo": {
+                    "description": "Optional URL to the payment method's logo\nexample: /images/transfer_bank.png",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The display name of the payment method\nexample: Transfer Bank",
+                    "type": "string"
+                }
+            }
+        },
+        "models.PaymentRequest": {
+            "type": "object",
+            "properties": {
+                "bukti_pembayaran": {
+                    "description": "URL or base64 of payment proof (optional)\nexample: https://example.com/payment-proof.jpg",
+                    "type": "string"
+                },
+                "jumlah": {
+                    "description": "The amount being paid\nexample: 50000",
+                    "type": "number"
+                },
+                "metode_pembayaran": {
+                    "description": "The payment method used\nexample: transfer_bank",
+                    "type": "string"
+                },
+                "tiket_id": {
+                    "description": "The ID of the ticket being paid for\nexample: 60d21b4667d0d8992e610c86",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "The ID of the user making the payment\nexample: 60d21b4667d0d8992e610c84",
+                    "type": "string"
+                }
+            }
+        },
+        "models.Pembayaran": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "description": "The unique identifier of the payment\nexample: 60d21b4667d0d8992e610c88",
+                    "type": "string"
+                },
+                "bukti_pembayaran": {
+                    "description": "URL or base64 of payment proof (optional)\nexample: https://example.com/payment-proof.jpg",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "The record creation timestamp",
+                    "type": "string"
+                },
+                "jumlah": {
+                    "description": "The payment amount\nexample: 50000",
+                    "type": "number"
+                },
+                "metode_pembayaran": {
+                    "description": "The payment method used\nexample: transfer_bank",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "The payment status (pending, completed, failed)\nenum: pending,completed,failed\nexample: completed",
+                    "type": "string"
+                },
+                "tanggal_pembayaran": {
+                    "description": "The date and time when the payment was made\nexample: 2025-07-22T15:04:05Z",
+                    "type": "string"
+                },
+                "tiket_id": {
+                    "description": "The ID of the ticket associated with this payment\nexample: 60d21b4667d0d8992e610c86",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "The record last update timestamp",
+                    "type": "string"
+                }
+            }
+        },
+        "models.TicketSummary": {
+            "type": "object",
+            "properties": {
+                "film_poster": {
+                    "description": "The URL to the film's poster image\nexample: https://example.com/posters/avengers.jpg",
+                    "type": "string"
+                },
+                "film_title": {
+                    "description": "The title of the film\nexample: Avengers: Endgame",
+                    "type": "string"
+                },
+                "harga_tiket": {
+                    "description": "The ticket price\nexample: 50000",
+                    "type": "number"
+                },
+                "jadwal_ruangan": {
+                    "description": "The theater room for the film\nexample: Studio 3",
+                    "type": "string"
+                },
+                "jadwal_tanggal": {
+                    "description": "The scheduled date for the film\nexample: 2025-07-25",
+                    "type": "string"
+                },
+                "jadwal_waktu": {
+                    "description": "The scheduled time for the film\nexample: 19:30",
+                    "type": "string"
+                },
+                "status_pembayaran": {
+                    "description": "The payment status\nexample: completed",
+                    "type": "string"
+                },
+                "tanggal_pembayaran": {
+                    "description": "The payment date (if paid)",
+                    "type": "string"
+                },
+                "tiket": {
+                    "description": "The ticket details",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Tiket"
+                        }
+                    ]
                 }
             }
         },
@@ -1091,28 +1673,35 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "_id": {
+                    "description": "The unique identifier of the ticket\nexample: 60d21b4667d0d8992e610c86",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "The record creation timestamp",
                     "type": "string"
                 },
                 "jadwal_id": {
+                    "description": "The ID of the schedule associated with this ticket\nexample: 60d21b4667d0d8992e610c85",
                     "type": "string"
                 },
                 "kursi": {
+                    "description": "The seat code for this ticket\nexample: A1",
                     "type": "string"
                 },
                 "status": {
-                    "description": "enum: TiketStatusConfirmed, TiketStatusCancelled, TiketStatusUsed",
+                    "description": "The ticket status (confirmed, cancelled, used)\nenum: confirmed,cancelled,used\nexample: confirmed",
                     "type": "string"
                 },
                 "tanggal_pembelian": {
+                    "description": "The date and time when the ticket was purchased\nexample: 2025-07-22T15:04:05Z",
                     "type": "string"
                 },
                 "updated_at": {
+                    "description": "The record last update timestamp",
                     "type": "string"
                 },
                 "user_id": {
+                    "description": "The ID of the user who purchased the ticket\nexample: 60d21b4667d0d8992e610c84",
                     "type": "string"
                 }
             }
@@ -1121,34 +1710,43 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "address": {
+                    "description": "User's address\nexample: 123 Main Street, City",
                     "type": "string"
                 },
                 "email": {
+                    "description": "Email address\nexample: john.doe@example.com",
                     "type": "string"
                 },
                 "firstname": {
+                    "description": "User's first name\nexample: John",
                     "type": "string"
                 },
                 "gender": {
+                    "description": "User's gender\nexample: male",
                     "type": "string"
                 },
                 "lastname": {
+                    "description": "User's last name\nexample: Doe",
                     "type": "string"
                 },
                 "password": {
+                    "description": "Hashed password (never returned in responses)",
                     "type": "string"
                 },
                 "phone_number": {
+                    "description": "User's phone number\nexample: +62123456789",
                     "type": "string"
                 },
                 "profile_picture_url": {
+                    "description": "URL to user's profile picture\nexample: https://example.com/profile.jpg",
                     "type": "string"
                 },
                 "role": {
-                    "description": "\"user\" or \"admin\"",
+                    "description": "User role (user or admin)\nenum: user,admin\nexample: user",
                     "type": "string"
                 },
                 "username": {
+                    "description": "Username for the account\nexample: johndoe",
                     "type": "string"
                 }
             }
@@ -1157,9 +1755,11 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "email": {
+                    "description": "User's email address\nexample: john.doe@example.com",
                     "type": "string"
                 },
                 "password": {
+                    "description": "User's password\nexample: securepassword123",
                     "type": "string"
                 }
             }
@@ -1168,33 +1768,43 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "address": {
+                    "description": "User's address\nexample: 123 Main Street, City",
                     "type": "string"
                 },
                 "email": {
+                    "description": "Email address\nexample: john.doe@example.com",
                     "type": "string"
                 },
                 "firstname": {
+                    "description": "User's first name\nexample: John",
                     "type": "string"
                 },
                 "gender": {
+                    "description": "User's gender\nexample: male",
                     "type": "string"
                 },
                 "lastname": {
+                    "description": "User's last name\nexample: Doe",
                     "type": "string"
                 },
                 "password": {
+                    "description": "Password for the account\nexample: securepassword123",
                     "type": "string"
                 },
                 "phone_number": {
+                    "description": "User's phone number\nexample: +62123456789",
                     "type": "string"
                 },
                 "profile_picture_url": {
+                    "description": "URL to user's profile picture\nexample: https://example.com/profile.jpg",
                     "type": "string"
                 },
                 "role": {
+                    "description": "User role (user or admin)\nenum: user,admin\nexample: user",
                     "type": "string"
                 },
                 "username": {
+                    "description": "Username for the account\nexample: johndoe",
                     "type": "string"
                 }
             }

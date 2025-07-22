@@ -318,3 +318,47 @@ func DeleteJadwal(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"message": "Jadwal deleted"})
 }
+
+// ValidateJadwalID godoc
+// @Summary Validasi ID jadwal untuk debugging
+// @Tags Jadwal
+// @Produce json
+// @Param id path string true "Jadwal ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /api/jadwals/check/{id} [get]
+func ValidateJadwalID(c *fiber.Ctx) error {
+	jadwalCollection := config.DB.Collection("jadwals")
+	id := c.Params("id")
+
+	// Coba konversi string ID ke ObjectID
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   "Invalid ID format",
+			"message": err.Error(),
+			"id":      id,
+		})
+	}
+
+	// Coba cari jadwal dengan _id
+	var jadwal models.Jadwal
+	err = jadwalCollection.FindOne(context.TODO(), bson.M{"_id": objectID}).Decode(&jadwal)
+	if err != nil {
+		// Jika tidak ditemukan dengan _id, coba cari dengan properti lain untuk debug
+		return c.Status(404).JSON(fiber.Map{
+			"error":   "Jadwal not found with _id",
+			"id":      id,
+			"message": err.Error(),
+		})
+	}
+
+	// Kembalikan informasi jadwal untuk debugging
+	return c.JSON(fiber.Map{
+		"message":       "Jadwal found",
+		"jadwal_id":     id,
+		"jadwal_object": jadwal,
+		"film_id":       jadwal.FilmID.Hex(),
+		"film_title":    jadwal.FilmTitle,
+	})
+}

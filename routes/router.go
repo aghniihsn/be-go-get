@@ -30,6 +30,7 @@ func SetupRoutes(app *fiber.App) {
 	api.Get("/jadwals/detail", controllers.GetAllJadwalsWithFilm)
 	api.Get("/jadwals/:id", controllers.GetJadwalByID)
 	api.Get("/jadwals/film/:filmId", controllers.GetJadwalsByFilmID)
+	api.Get("/jadwals/check/:id", controllers.ValidateJadwalID) // Endpoint untuk debugging ID jadwal
 
 	// Protected routes - require authentication
 	protected := api.Group("", middleware.AuthRequired())
@@ -41,16 +42,19 @@ func SetupRoutes(app *fiber.App) {
 	// Tiket routes (authenticated users)
 	protected.Get("/tikets/user/:user_id", controllers.GetTiketByUserID)
 	protected.Post("/tikets", controllers.CreateTiket)
+	protected.Post("/tikets/batch", controllers.CreateBatchTikets)
 	protected.Put("/tikets/:id", controllers.UpdateTiket)
 	protected.Delete("/tikets/:id", controllers.CancelTiket)
 	api.Get("/jadwals/:jadwal_id/kursi-kosong", controllers.GetKursiKosong)
 	protected.Get("/tikets/me", controllers.GetTiketUser)
+	protected.Get("/tikets/:id/summary", controllers.GetTicketSummary)
 
 	// Pembayaran routes (authenticated users)
 	protected.Get("/pembayarans/:id", controllers.GetPembayaranByID)
 	protected.Get("/pembayarans/user/:user_id", controllers.GetPembayaranByUserID)
 	protected.Post("/pembayarans", controllers.CreatePembayaran)
 	protected.Put("/pembayarans/:id", controllers.UpdatePembayaran)
+	api.Get("/payment-methods", controllers.GetPaymentMethods)
 
 	// Admin only routes
 	admin := api.Group("", middleware.AdminOnly())
