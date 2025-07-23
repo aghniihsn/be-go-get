@@ -57,7 +57,7 @@ const (
 )
 
 type Jadwal struct {
-	ID        primitive.ObjectID `json:"-" bson:"_id,omitempty"`
+	ID        primitive.ObjectID `json:"_id" bson:"_id,omitempty"`
 	FilmID    primitive.ObjectID `json:"film_id" bson:"film_id"`
 	FilmTitle string             `json:"film_title" bson:"film_title"`
 	Tanggal   string             `json:"tanggal" bson:"tanggal"`
