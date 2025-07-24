@@ -1,0 +1,19 @@
+{
+  "build": {
+    "env": {
+      "GO111MODULE": "on"
+    },
+    "command": "go build -o app main.go"
+  },
+  "deploy": {
+    "startCommand": "./app",
+    "restartPolicyType": "ON_FAILURE"
+  },
+  "envs": [
+    "MONGODB_URI",
+    "SUPABASE_URL",
+    "SUPABASE_KEY",
+    "SUPABASE_BUCKET",
+    "JWT_SECRET"
+  ]
+}

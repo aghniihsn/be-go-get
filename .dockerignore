@@ -1,0 +1,10 @@
+# Ignore files/folders for Docker build
+.git
+.gitignore
+node_modules
+uploads/*
+!uploads/.gitkeep
+*.md
+*.bak
+*.log
+.env.local
