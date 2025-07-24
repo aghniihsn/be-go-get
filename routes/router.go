@@ -54,7 +54,7 @@ func SetupRoutes(app *fiber.App) {
 	protected.Get("/pembayarans/:id", controllers.GetPembayaranByID)
 	protected.Get("/pembayarans/user/:user_id", controllers.GetPembayaranByUserID)
 	protected.Post("/pembayarans", controllers.CreatePembayaran)
-	protected.Post("/pembayarans/receipt", controllers.CreatePembayaranWithReceipt) // With receipt upload
+	// protected.Post("/pembayarans/receipt", controllers.CreatePembayaranWithReceipt) // Dihapus: tidak perlu upload bukti pembayaran
 	protected.Put("/pembayarans/:id", controllers.UpdatePembayaran)
 	api.Get("/payment-methods", controllers.GetPaymentMethods)
 
