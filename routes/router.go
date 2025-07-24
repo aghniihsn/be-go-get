@@ -20,6 +20,7 @@ func SetupRoutes(app *fiber.App) {
 	auth.Post("/login", controllers.Login)
 	auth.Get("/profile", middleware.AuthRequired(), controllers.GetProfile)
 	auth.Put("/profile", middleware.AuthRequired(), controllers.UpdateProfile)
+	auth.Put("/profile/image", middleware.AuthRequired(), controllers.UpdateProfileWithImage)
 
 	// Public routes (no auth required)
 	api.Get("/films", controllers.GetAllFilms)
@@ -53,6 +54,7 @@ func SetupRoutes(app *fiber.App) {
 	protected.Get("/pembayarans/:id", controllers.GetPembayaranByID)
 	protected.Get("/pembayarans/user/:user_id", controllers.GetPembayaranByUserID)
 	protected.Post("/pembayarans", controllers.CreatePembayaran)
+	protected.Post("/pembayarans/receipt", controllers.CreatePembayaranWithReceipt) // With receipt upload
 	protected.Put("/pembayarans/:id", controllers.UpdatePembayaran)
 	api.Get("/payment-methods", controllers.GetPaymentMethods)
 

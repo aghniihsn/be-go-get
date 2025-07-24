@@ -1,10 +1,16 @@
+// Helper function to validate film rating}
+
 package controllers
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"time"
+
 	"go-get-backend/config"
 	"go-get-backend/models"
-	"time"
+	"go-get-backend/pkg/storage"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -57,6 +63,17 @@ func GetFilmByID(c *fiber.Ctx) error {
 	return c.JSON(film)
 }
 
+// Helper function to validate film rating
+func isValidRating(rating string) bool {
+	validRatings := []string{models.RatingSemua, models.RatingAnak, models.RatingRemaja, models.RatingDewasa}
+	for _, r := range validRatings {
+		if r == rating {
+			return true
+		}
+	}
+	return false
+}
+
 // CreateFilm godoc
 // @Summary Create a new film
 // @Description Create a new film in the cinema
@@ -81,66 +98,66 @@ func GetFilmByID(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/films [post]
 func CreateFilm(c *fiber.Ctx) error {
-	// Define allowed genres and ratings
-	allowedGenres := map[string]bool{
-		"Action": true, "Adventure": true, "Animation": true, "Biography": true, "Comedy": true, "Crime": true, "Documentary": true, "Drama": true, "Family": true, "Fantasy": true, "History": true, "Horror": true, "Music": true, "Musical": true, "Mystery": true, "Romance": true, "Sci-Fi": true, "Sport": true, "Thriller": true, "War": true, "Western": true,
-	}
-	allowedRatings := map[string]bool{
-		models.RatingSemua: true, models.RatingAnak: true, models.RatingRemaja: true, models.RatingDewasa: true,
+	// Parse multipart form
+	form, err := c.MultipartForm()
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Expected multipart form"})
 	}
 
-	var input struct {
-		Title       string   `json:"title"`
-		Genre       []string `json:"genre"`
-		Duration    int      `json:"duration"`
-		Rating      string   `json:"rating"`
-		Description string   `json:"description"`
-		PosterURL   string   `json:"poster_url"`
+	title := c.FormValue("title")
+	description := c.FormValue("description")
+	durationStr := c.FormValue("duration")
+	ratingStr := c.FormValue("rating")
+	genresStr := c.FormValue("genre")
+
+	if title == "" || durationStr == "" || ratingStr == "" || genresStr == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Title, duration, rating, and genre are required"})
 	}
 
-	if err := c.BodyParser(&input); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
+	// Konversi duration ke int
+	var duration int
+	if _, err := fmt.Sscanf(durationStr, "%d", &duration); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Duration must be a number"})
 	}
 
-	// Title validation
-	if input.Title == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "Title is required"})
+	// Validasi rating
+	if !isValidRating(ratingStr) {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid rating. Must be one of: Semua Umur, Anak-anak, Remaja, Dewasa"})
 	}
 
-	// Genre validation: must be array, at least one, all valid
-	if len(input.Genre) == 0 {
-		return c.Status(400).JSON(fiber.Map{"error": "At least one genre is required"})
-	}
-	for _, g := range input.Genre {
-		if !allowedGenres[g] {
-			return c.Status(400).JSON(fiber.Map{"error": "Invalid genre: " + g})
-		}
+	// Parse genres
+	genres := strings.Split(genresStr, ",")
+	for i, genre := range genres {
+		genres[i] = strings.TrimSpace(genre)
 	}
 
-	// Duration validation
-	if input.Duration <= 0 {
-		return c.Status(400).JSON(fiber.Map{"error": "Duration must be positive"})
+	// Handle poster upload
+	posterFiles := form.File["poster"]
+	if len(posterFiles) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "Poster file is required"})
 	}
 
-	// Rating validation
-	if !allowedRatings[input.Rating] {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid rating"})
+	// Get storage service
+	storageService, err := storage.GetStorageService()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": fmt.Sprintf("Storage initialization failed: %v", err)})
 	}
 
-	// PosterURL validation (simple)
-	if input.PosterURL == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "Poster URL is required"})
+	// Upload poster to storage
+	posterURL, err := storageService.Upload(posterFiles[0], storage.FilmPoster, posterFiles[0].Filename)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": fmt.Sprintf("Failed to upload poster: %v", err)})
 	}
 
 	now := time.Now()
 	film := models.Film{
 		ID:          primitive.NewObjectID(),
-		Title:       input.Title,
-		Genre:       input.Genre,
-		Duration:    input.Duration,
-		Rating:      input.Rating,
-		Description: input.Description,
-		PosterURL:   input.PosterURL,
+		Title:       title,
+		Genre:       genres,
+		Duration:    duration,
+		Rating:      ratingStr,
+		Description: description,
+		PosterURL:   posterURL,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -148,6 +165,7 @@ func CreateFilm(c *fiber.Ctx) error {
 	collection := config.DB.Collection("films")
 	result, err := collection.InsertOne(context.TODO(), film)
 	if err != nil {
+		_ = storageService.Delete(posterURL)
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 	film.ID = result.InsertedID.(primitive.ObjectID)
@@ -183,68 +201,94 @@ func CreateFilm(c *fiber.Ctx) error {
 // @Router /api/films/{id} [put]
 func UpdateFilm(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// Define allowed genres and ratings
-	allowedGenres := map[string]bool{
-		"Action": true, "Adventure": true, "Animation": true, "Biography": true, "Comedy": true, "Crime": true, "Documentary": true, "Drama": true, "Family": true, "Fantasy": true, "History": true, "Horror": true, "Music": true, "Musical": true, "Mystery": true, "Romance": true, "Sci-Fi": true, "Sport": true, "Thriller": true, "War": true, "Western": true,
-	}
-	allowedRatings := map[string]bool{
-		models.RatingSemua: true, models.RatingAnak: true, models.RatingRemaja: true, models.RatingDewasa: true,
-	}
 
-	var input struct {
-		Title       string   `json:"title"`
-		Genre       []string `json:"genre"`
-		Duration    int      `json:"duration"`
-		Rating      string   `json:"rating"`
-		Description string   `json:"description"`
-		PosterURL   string   `json:"poster_url"`
-	}
-	if err := c.BodyParser(&input); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
-	}
-	if input.Title == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "Title is required"})
-	}
-	if len(input.Genre) == 0 {
-		return c.Status(400).JSON(fiber.Map{"error": "At least one genre is required"})
-	}
-	for _, g := range input.Genre {
-		if !allowedGenres[g] {
-			return c.Status(400).JSON(fiber.Map{"error": "Invalid genre: " + g})
-		}
-	}
-	if input.Duration <= 0 {
-		return c.Status(400).JSON(fiber.Map{"error": "Duration must be positive"})
-	}
-	if !allowedRatings[input.Rating] {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid rating"})
-	}
-	if input.PosterURL == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "Poster URL is required"})
-	}
-
-	update := bson.M{
-		"$set": bson.M{
-			"title":       input.Title,
-			"genre":       input.Genre,
-			"duration":    input.Duration,
-			"rating":      input.Rating,
-			"description": input.Description,
-			"poster_url":  input.PosterURL,
-			"updated_at":  time.Now(),
-		},
-	}
-
-	collection := config.DB.Collection("films")
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid ObjectID format"})
 	}
-	res, err := collection.UpdateOne(context.TODO(), bson.M{"_id": objectID}, update)
-	if err != nil || res.MatchedCount == 0 {
-		return c.Status(404).JSON(fiber.Map{"error": "Film not found or update failed"})
+
+	// Get existing film
+	collection := config.DB.Collection("films")
+	var existingFilm models.Film
+	err = collection.FindOne(context.TODO(), bson.M{"_id": objectID}).Decode(&existingFilm)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Film not found"})
 	}
-	return c.JSON(fiber.Map{"message": "Film updated successfully"})
+
+	// Parse multipart form
+	form, err := c.MultipartForm()
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Expected multipart form"})
+	}
+
+	update := bson.M{
+		"updated_at": time.Now(),
+	}
+
+	if title := c.FormValue("title"); title != "" {
+		update["title"] = title
+	}
+	if description := c.FormValue("description"); description != "" {
+		update["description"] = description
+	}
+	if durationStr := c.FormValue("duration"); durationStr != "" {
+		var duration int
+		if _, err := fmt.Sscanf(durationStr, "%d", &duration); err != nil {
+			return c.Status(400).JSON(fiber.Map{"error": "Duration must be a number"})
+		}
+		update["duration"] = duration
+	}
+	if ratingStr := c.FormValue("rating"); ratingStr != "" {
+		if !isValidRating(ratingStr) {
+			return c.Status(400).JSON(fiber.Map{"error": "Invalid rating. Must be one of: Semua Umur, Anak-anak, Remaja, Dewasa"})
+		}
+		update["rating"] = ratingStr
+	}
+	if genresStr := c.FormValue("genre"); genresStr != "" {
+		genres := strings.Split(genresStr, ",")
+		for i, genre := range genres {
+			genres[i] = strings.TrimSpace(genre)
+		}
+		update["genre"] = genres
+	}
+
+	// Handle poster update if provided
+	posterFiles := form.File["poster"]
+	if len(posterFiles) > 0 {
+		storageService, err := storage.GetStorageService()
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": fmt.Sprintf("Storage initialization failed: %v", err)})
+		}
+		posterURL, err := storageService.Upload(posterFiles[0], storage.FilmPoster, posterFiles[0].Filename)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": fmt.Sprintf("Failed to upload poster: %v", err)})
+		}
+		if existingFilm.PosterURL != "" {
+			_ = storageService.Delete(existingFilm.PosterURL)
+		}
+		update["poster_url"] = posterURL
+	}
+
+	result, err := collection.UpdateOne(
+		context.TODO(),
+		bson.M{"_id": objectID},
+		bson.M{"$set": update},
+	)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	if result.MatchedCount == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "Film not found"})
+	}
+
+	var updatedFilm models.Film
+	err = collection.FindOne(context.TODO(), bson.M{"_id": objectID}).Decode(&updatedFilm)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to retrieve updated film"})
+	}
+
+	return c.JSON(updatedFilm)
 }
 
 // DeleteFilm godoc

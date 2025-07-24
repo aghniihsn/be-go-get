@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"go-get-backend/config"
 	"go-get-backend/config/middleware"
 	"go-get-backend/models"
 	"go-get-backend/pkg/password"
+	"go-get-backend/pkg/storage"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -222,61 +224,75 @@ func UpdateProfile(c *fiber.Ctx) error {
 	currentUser := c.Locals("user").(*models.JWTPayload)
 	userCollection := config.DB.Collection("users")
 
-	var input models.User
-	if err := c.BodyParser(&input); err != nil {
-		return c.Status(400).JSON(fiber.Map{
-			"error": "Invalid input",
-		})
-	}
-	// Gender validation (only 'male' or 'female' allowed)
-	if input.Gender != "" && input.Gender != "male" && input.Gender != "female" {
-		return c.Status(400).JSON(fiber.Map{
-			"error": "Gender must be either 'male' or 'female'",
-		})
+	form, err := c.MultipartForm()
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Expected multipart form"})
 	}
 
-	// Build update document
 	updateDoc := bson.M{
 		"updated_at": time.Now(),
 	}
-	if input.Username != "" {
-		updateDoc["username"] = input.Username
+
+	if username := c.FormValue("username"); username != "" {
+		updateDoc["username"] = username
 	}
-	if input.Email != "" {
-		updateDoc["email"] = input.Email
+	if email := c.FormValue("email"); email != "" {
+		updateDoc["email"] = email
 	}
-	if input.Firstname != "" {
-		updateDoc["firstname"] = input.Firstname
+	if firstname := c.FormValue("firstname"); firstname != "" {
+		updateDoc["firstname"] = firstname
 	}
-	if input.Lastname != "" {
-		updateDoc["lastname"] = input.Lastname
+	if lastname := c.FormValue("lastname"); lastname != "" {
+		updateDoc["lastname"] = lastname
 	}
-	if input.Gender != "" {
-		updateDoc["gender"] = input.Gender
+	if gender := c.FormValue("gender"); gender != "" {
+		if gender != "male" && gender != "female" {
+			return c.Status(400).JSON(fiber.Map{"error": "Gender must be either 'male' or 'female'"})
+		}
+		updateDoc["gender"] = gender
 	}
-	if input.PhoneNumber != "" {
-		updateDoc["phone_number"] = input.PhoneNumber
+	if phoneNumber := c.FormValue("phone_number"); phoneNumber != "" {
+		updateDoc["phone_number"] = phoneNumber
 	}
-	if input.ProfilePictureURL != "" {
-		updateDoc["profile_picture_url"] = input.ProfilePictureURL
-	}
-	if input.Address != "" {
-		updateDoc["address"] = input.Address
+	if address := c.FormValue("address"); address != "" {
+		updateDoc["address"] = address
 	}
 
-	// Update user
-	_, err := userCollection.UpdateOne(
+	// Handle profile picture upload if provided
+	profilePicFiles := form.File["profile_picture"]
+	if len(profilePicFiles) > 0 {
+		storageService, err := storage.GetStorageService()
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": fmt.Sprintf("Storage initialization failed: %v", err)})
+		}
+		// Get user for old picture deletion
+		var user models.User
+		err = userCollection.FindOne(context.TODO(), bson.M{"_id": currentUser.ID}).Decode(&user)
+		if err != nil {
+			return c.Status(404).JSON(fiber.Map{"error": "User not found"})
+		}
+		profilePicURL, err := storageService.Upload(
+			profilePicFiles[0],
+			storage.ProfilePicture,
+			profilePicFiles[0].Filename,
+		)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": fmt.Sprintf("Failed to upload profile picture: %v", err)})
+		}
+		if user.ProfilePictureURL != "" {
+			_ = storageService.Delete(user.ProfilePictureURL)
+		}
+		updateDoc["profile_picture_url"] = profilePicURL
+	}
+
+	_, err = userCollection.UpdateOne(
 		context.TODO(),
 		bson.M{"_id": currentUser.ID},
 		bson.M{"$set": updateDoc},
 	)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"error": "Failed to update profile",
-		})
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to update profile"})
 	}
 
-	return c.JSON(fiber.Map{
-		"message": "Profile updated successfully",
-	})
+	return c.JSON(fiber.Map{"message": "Profile updated successfully"})
 }

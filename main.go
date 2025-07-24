@@ -45,6 +45,9 @@ func main() {
 	// Swagger endpoint
 	app.Get("/docs/*", fiberSwagger.WrapHandler)
 
+	// Serve static files for local development
+	app.Static("/uploads", "./uploads")
+
 	routes.SetupRoutes(app)
 
 	app.Listen(":3000")

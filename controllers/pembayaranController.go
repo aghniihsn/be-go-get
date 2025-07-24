@@ -5,12 +5,109 @@ import (
 	"fmt"
 	"go-get-backend/config"
 	"go-get-backend/models"
+	"go-get-backend/pkg/storage"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// CreatePembayaranWithReceipt godoc
+// @Summary Create payment with receipt
+// @Description Create a new payment with receipt upload
+// @Tags Pembayaran
+// @Accept multipart/form-data
+// @Produce json
+// @Param tiket_id formData string true "Ticket ID"
+// @Param jumlah formData number true "Payment amount"
+// @Param metode_pembayaran formData string true "Payment method"
+// @Param bukti_pembayaran formData file true "Payment receipt image"
+// @Success 201 {object} models.Pembayaran
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/pembayarans/receipt [post]
+// @Security BearerAuth
+func CreatePembayaranWithReceipt(c *fiber.Ctx) error {
+	form, err := c.MultipartForm()
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Expected multipart form"})
+	}
+
+	tiketIDStr := c.FormValue("tiket_id")
+	if tiketIDStr == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Ticket ID is required"})
+	}
+
+	jumlahStr := c.FormValue("jumlah")
+	if jumlahStr == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Payment amount is required"})
+	}
+
+	metodePembayaran := c.FormValue("metode_pembayaran")
+	if metodePembayaran == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Payment method is required"})
+	}
+
+	tiketID, err := primitive.ObjectIDFromHex(tiketIDStr)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid Ticket ID format"})
+	}
+
+	jumlah, err := strconv.ParseFloat(jumlahStr, 64)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid payment amount"})
+	}
+
+	tiketCollection := config.DB.Collection("tikets")
+	var tiket models.Tiket
+	err = tiketCollection.FindOne(context.TODO(), bson.M{"_id": tiketID}).Decode(&tiket)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Ticket not found"})
+	}
+
+	receiptFiles := form.File["bukti_pembayaran"]
+	if len(receiptFiles) == 0 {
+		return c.Status(400).JSON(fiber.Map{"error": "Payment receipt is required"})
+	}
+
+	storageService, err := storage.GetStorageService()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": fmt.Sprintf("Storage initialization failed: %v", err)})
+	}
+
+	receiptURL, err := storageService.Upload(
+		receiptFiles[0],
+		storage.PaymentReceipt,
+		receiptFiles[0].Filename,
+	)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": fmt.Sprintf("Failed to upload receipt: %v", err)})
+	}
+
+	now := time.Now()
+	pembayaran := models.Pembayaran{
+		TiketID:           tiketID,
+		Jumlah:            jumlah,
+		MetodePembayaran:  metodePembayaran,
+		Status:            "pending",
+		BuktiPembayaran:   receiptURL,
+		TanggalPembayaran: now,
+		CreatedAt:         now,
+		UpdatedAt:         now,
+	}
+
+	pembayaranCollection := config.DB.Collection("pembayarans")
+	result, err := pembayaranCollection.InsertOne(context.TODO(), pembayaran)
+	if err != nil {
+		_ = storageService.Delete(receiptURL)
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	pembayaran.ID = result.InsertedID.(primitive.ObjectID)
+	return c.Status(201).JSON(pembayaran)
+}
 
 // GetAllPembayaran godoc
 // @Summary Get all payments (admin only)
