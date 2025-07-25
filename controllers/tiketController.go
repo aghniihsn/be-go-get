@@ -157,8 +157,12 @@ func CreateTiket(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Kursi tidak valid"})
 	}
 
-	// Cek kursi sudah dibooking di jadwal yang sama (status confirmed)
-	count, err := tiketCollection.CountDocuments(context.TODO(), bson.M{"jadwal_id": jadwalID, "kursi": input.Kursi, "status": models.TiketStatusConfirmed})
+	// Cek kursi sudah dibooking di jadwal yang sama (status confirmed atau waiting_for_payment)
+	count, err := tiketCollection.CountDocuments(context.TODO(), bson.M{
+		"jadwal_id": jadwalID,
+		"kursi":     input.Kursi,
+		"status":    bson.M{"$in": []string{models.TiketStatusConfirmed, models.TiketStatusWaitingPayment}},
+	})
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -169,12 +173,13 @@ func CreateTiket(c *fiber.Ctx) error {
 	// Validasi status
 	status := input.Status
 	validStatus := map[string]bool{
-		models.TiketStatusConfirmed: true,
-		models.TiketStatusCancelled: true,
-		models.TiketStatusUsed:      true,
+		models.TiketStatusWaitingPayment: true,
+		models.TiketStatusConfirmed:      true,
+		models.TiketStatusCancelled:      true,
+		models.TiketStatusUsed:           true,
 	}
 	if status == "" {
-		status = models.TiketStatusConfirmed
+		status = models.TiketStatusWaitingPayment // Default status untuk tiket baru
 	}
 	if !validStatus[status] {
 		return c.Status(400).JSON(fiber.Map{"error": "Status tiket tidak valid"})
@@ -282,7 +287,10 @@ func GetKursiKosong(c *fiber.Ctx) error {
 	}
 	tiketCollection := config.DB.Collection("tikets")
 	var tikets []models.Tiket
-	cursor, err := tiketCollection.Find(context.TODO(), bson.M{"jadwal_id": objectID, "status": models.TiketStatusConfirmed})
+	cursor, err := tiketCollection.Find(context.TODO(), bson.M{
+		"jadwal_id": objectID,
+		"status":    bson.M{"$in": []string{models.TiketStatusConfirmed, models.TiketStatusWaitingPayment}},
+	})
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}

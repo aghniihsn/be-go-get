@@ -8,6 +8,12 @@ import (
 )
 
 func SetupRoutes(app *fiber.App) {
+	// Redirect /docs ke /docs/index.html agar Swagger UI langsung tampil
+	app.Get("/docs", func(c *fiber.Ctx) error {
+		return c.Redirect("/docs/index.html", 302)
+	})
+	// Swagger docs route
+	app.Get("/docs/*", controllers.SwaggerHandler())
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Go Get API is running")
 	})

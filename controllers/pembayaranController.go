@@ -197,6 +197,17 @@ func CreatePembayaran(c *fiber.Ctx) error {
 
 	pembayaran.ID = result.InsertedID.(primitive.ObjectID)
 
+	// Update tiket status menjadi confirmed karena pembayaran sudah dibuat dengan status "paid"
+	_, err = tiketCollection.UpdateOne(
+		context.TODO(),
+		bson.M{"_id": tiketID},
+		bson.M{"$set": bson.M{"status": models.TiketStatusConfirmed, "updated_at": time.Now()}},
+	)
+	if err != nil {
+		// Log error but don't fail the response
+		fmt.Println("Failed to update ticket status:", err)
+	}
+
 	return c.Status(201).JSON(fiber.Map{
 		"message":    "Terima kasih telah melakukan pembayaran!",
 		"status":     "paid",

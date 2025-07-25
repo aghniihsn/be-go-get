@@ -22,70 +22,38 @@ definitions:
     type: object
   models.Film:
     properties:
+      _id:
+        type: string
       description:
-        description: |-
-          Film description/synopsis
-          example: After the devastating events of Avengers: Infinity War...
         type: string
       duration:
-        description: |-
-          Duration in minutes
-          example: 181
         type: integer
       genre:
-        description: |-
-          Film genres
-          example: ["Action", "Adventure", "Sci-Fi"]
         items:
           type: string
         type: array
       poster_url:
-        description: |-
-          URL to film poster image
-          example: https://example.com/posters/avengers.jpg
         type: string
       rating:
-        description: |-
-          Film rating category
-          example: Remaja
         type: string
       title:
-        description: |-
-          Film title
-          example: Avengers: Endgame
         type: string
     type: object
   models.Jadwal:
     properties:
+      _id:
+        type: string
       film_id:
-        description: |-
-          ID of the associated film
-          example: 60d21b4667d0d8992e610c90
         type: string
       film_title:
-        description: |-
-          Film title (denormalized for convenience)
-          example: Avengers: Endgame
         type: string
       harga:
-        description: |-
-          Ticket price
-          example: 50000
         type: number
       ruangan:
-        description: |-
-          Theater room
-          example: Studio 3
         type: string
       tanggal:
-        description: |-
-          Screening date in YYYY-MM-DD format
-          example: 2025-07-25
         type: string
       waktu:
-        description: |-
-          Screening time in HH:MM format
-          example: 19:30
         type: string
     type: object
   models.MetodePembayaran:
@@ -142,46 +110,22 @@ definitions:
   models.Pembayaran:
     properties:
       _id:
-        description: |-
-          The unique identifier of the payment
-          example: 60d21b4667d0d8992e610c88
         type: string
       bukti_pembayaran:
-        description: |-
-          URL or base64 of payment proof (optional)
-          example: https://example.com/payment-proof.jpg
         type: string
       created_at:
-        description: The record creation timestamp
         type: string
       jumlah:
-        description: |-
-          The payment amount
-          example: 50000
         type: number
       metode_pembayaran:
-        description: |-
-          The payment method used
-          example: transfer_bank
         type: string
       status:
-        description: |-
-          The payment status (pending, completed, failed)
-          enum: pending,completed,failed
-          example: completed
         type: string
       tanggal_pembayaran:
-        description: |-
-          The date and time when the payment was made
-          example: 2025-07-22T15:04:05Z
         type: string
       tiket_id:
-        description: |-
-          The ID of the ticket associated with this payment
-          example: 60d21b4667d0d8992e610c86
         type: string
       updated_at:
-        description: The record last update timestamp
         type: string
     type: object
   models.TicketSummary:
@@ -232,160 +176,73 @@ definitions:
   models.Tiket:
     properties:
       _id:
-        description: |-
-          The unique identifier of the ticket
-          example: 60d21b4667d0d8992e610c86
         type: string
       created_at:
-        description: The record creation timestamp
         type: string
       jadwal_id:
-        description: |-
-          The ID of the schedule associated with this ticket
-          example: 60d21b4667d0d8992e610c85
         type: string
       kursi:
-        description: |-
-          The seat code for this ticket
-          example: A1
         type: string
       status:
-        description: |-
-          The ticket status (confirmed, cancelled, used)
-          enum: confirmed,cancelled,used
-          example: confirmed
         type: string
       tanggal_pembelian:
-        description: |-
-          The date and time when the ticket was purchased
-          example: 2025-07-22T15:04:05Z
         type: string
       updated_at:
-        description: The record last update timestamp
         type: string
       user_id:
-        description: |-
-          The ID of the user who purchased the ticket
-          example: 60d21b4667d0d8992e610c84
         type: string
     type: object
   models.User:
     properties:
       address:
-        description: |-
-          User's address
-          example: 123 Main Street, City
         type: string
       email:
-        description: |-
-          Email address
-          example: john.doe@example.com
         type: string
       firstname:
-        description: |-
-          User's first name
-          example: John
         type: string
       gender:
-        description: |-
-          User's gender
-          example: male
         type: string
       lastname:
-        description: |-
-          User's last name
-          example: Doe
         type: string
       password:
-        description: Hashed password (never returned in responses)
         type: string
       phone_number:
-        description: |-
-          User's phone number
-          example: +62123456789
         type: string
       profile_picture_url:
-        description: |-
-          URL to user's profile picture
-          example: https://example.com/profile.jpg
         type: string
       role:
-        description: |-
-          User role (user or admin)
-          enum: user,admin
-          example: user
         type: string
       username:
-        description: |-
-          Username for the account
-          example: johndoe
         type: string
     type: object
   models.UserLogin:
     properties:
       email:
-        description: |-
-          User's email address
-          example: john.doe@example.com
         type: string
       password:
-        description: |-
-          User's password
-          example: securepassword123
         type: string
     type: object
   models.UserRegister:
     properties:
       address:
-        description: |-
-          User's address
-          example: 123 Main Street, City
         type: string
       email:
-        description: |-
-          Email address
-          example: john.doe@example.com
         type: string
       firstname:
-        description: |-
-          User's first name
-          example: John
         type: string
       gender:
-        description: |-
-          User's gender
-          example: male
         type: string
       lastname:
-        description: |-
-          User's last name
-          example: Doe
         type: string
       password:
-        description: |-
-          Password for the account
-          example: securepassword123
         type: string
       phone_number:
-        description: |-
-          User's phone number
-          example: +62123456789
         type: string
       profile_picture_url:
-        description: |-
-          URL to user's profile picture
-          example: https://example.com/profile.jpg
         type: string
       role:
-        description: |-
-          User role (user or admin)
-          enum: user,admin
-          example: user
         type: string
       username:
-        description: |-
-          Username for the account
-          example: johndoe
         type: string
     type: object
 host: localhost:3000
@@ -440,6 +297,58 @@ paths:
       summary: Login user
       tags:
       - Auth
+  /api/auth/profile:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update user profile information with optional profile picture upload
+      parameters:
+      - description: First name
+        in: formData
+        name: firstname
+        type: string
+      - description: Last name
+        in: formData
+        name: lastname
+        type: string
+      - description: Gender (male or female)
+        in: formData
+        name: gender
+        type: string
+      - description: Phone number
+        in: formData
+        name: phone_number
+        type: string
+      - description: Address
+        in: formData
+        name: address
+        type: string
+      - description: Profile picture
+        in: formData
+        name: profile_picture
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user profile with image
+      tags:
+      - User
   /api/auth/register:
     post:
       consumes:
@@ -473,6 +382,38 @@ paths:
       summary: Register a new user
       tags:
       - Auth
+  /api/debug/ids:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all document IDs for debugging
+      tags:
+      - Debug
+  /api/debug/jadwal/{id}:
+    get:
+      parameters:
+      - description: Jadwal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Check if jadwal exists with specific ID
+      tags:
+      - Debug
   /api/films:
     get:
       consumes:
@@ -769,6 +710,30 @@ paths:
       security:
       - BearerAuth: []
       summary: Update jadwal by ID
+      tags:
+      - Jadwal
+  /api/jadwals/check/{id}:
+    get:
+      parameters:
+      - description: Jadwal ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Validasi ID jadwal untuk debugging
       tags:
       - Jadwal
   /api/payment-methods:

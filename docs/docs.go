@@ -80,6 +80,86 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/auth/profile": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update user profile information with optional profile picture upload",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update user profile with image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "First name",
+                        "name": "firstname",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Last name",
+                        "name": "lastname",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Gender (male or female)",
+                        "name": "gender",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Phone number",
+                        "name": "phone_number",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Address",
+                        "name": "address",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Profile picture",
+                        "name": "profile_picture",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/auth/register": {
             "post": {
                 "description": "Register a new user (user or admin)",
@@ -121,6 +201,55 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/debug/ids": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Debug"
+                ],
+                "summary": "Get all document IDs for debugging",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/debug/jadwal/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Debug"
+                ],
+                "summary": "Check if jadwal exists with specific ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Jadwal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -427,6 +556,42 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/jadwals/check/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Jadwal"
+                ],
+                "summary": "Validasi ID jadwal untuk debugging",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Jadwal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1479,31 +1644,28 @@ const docTemplate = `{
         "models.Film": {
             "type": "object",
             "properties": {
+                "_id": {
+                    "type": "string"
+                },
                 "description": {
-                    "description": "Film description/synopsis\nexample: After the devastating events of Avengers: Infinity War...",
                     "type": "string"
                 },
                 "duration": {
-                    "description": "Duration in minutes\nexample: 181",
                     "type": "integer"
                 },
                 "genre": {
-                    "description": "Film genres\nexample: [\"Action\", \"Adventure\", \"Sci-Fi\"]",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
                 "poster_url": {
-                    "description": "URL to film poster image\nexample: https://example.com/posters/avengers.jpg",
                     "type": "string"
                 },
                 "rating": {
-                    "description": "Film rating category\nexample: Remaja",
                     "type": "string"
                 },
                 "title": {
-                    "description": "Film title\nexample: Avengers: Endgame",
                     "type": "string"
                 }
             }
@@ -1511,28 +1673,25 @@ const docTemplate = `{
         "models.Jadwal": {
             "type": "object",
             "properties": {
+                "_id": {
+                    "type": "string"
+                },
                 "film_id": {
-                    "description": "ID of the associated film\nexample: 60d21b4667d0d8992e610c90",
                     "type": "string"
                 },
                 "film_title": {
-                    "description": "Film title (denormalized for convenience)\nexample: Avengers: Endgame",
                     "type": "string"
                 },
                 "harga": {
-                    "description": "Ticket price\nexample: 50000",
                     "type": "number"
                 },
                 "ruangan": {
-                    "description": "Theater room\nexample: Studio 3",
                     "type": "string"
                 },
                 "tanggal": {
-                    "description": "Screening date in YYYY-MM-DD format\nexample: 2025-07-25",
                     "type": "string"
                 },
                 "waktu": {
-                    "description": "Screening time in HH:MM format\nexample: 19:30",
                     "type": "string"
                 }
             }
@@ -1587,39 +1746,30 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "_id": {
-                    "description": "The unique identifier of the payment\nexample: 60d21b4667d0d8992e610c88",
                     "type": "string"
                 },
                 "bukti_pembayaran": {
-                    "description": "URL or base64 of payment proof (optional)\nexample: https://example.com/payment-proof.jpg",
                     "type": "string"
                 },
                 "created_at": {
-                    "description": "The record creation timestamp",
                     "type": "string"
                 },
                 "jumlah": {
-                    "description": "The payment amount\nexample: 50000",
                     "type": "number"
                 },
                 "metode_pembayaran": {
-                    "description": "The payment method used\nexample: transfer_bank",
                     "type": "string"
                 },
                 "status": {
-                    "description": "The payment status (pending, completed, failed)\nenum: pending,completed,failed\nexample: completed",
                     "type": "string"
                 },
                 "tanggal_pembayaran": {
-                    "description": "The date and time when the payment was made\nexample: 2025-07-22T15:04:05Z",
                     "type": "string"
                 },
                 "tiket_id": {
-                    "description": "The ID of the ticket associated with this payment\nexample: 60d21b4667d0d8992e610c86",
                     "type": "string"
                 },
                 "updated_at": {
-                    "description": "The record last update timestamp",
                     "type": "string"
                 }
             }
@@ -1673,35 +1823,27 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "_id": {
-                    "description": "The unique identifier of the ticket\nexample: 60d21b4667d0d8992e610c86",
                     "type": "string"
                 },
                 "created_at": {
-                    "description": "The record creation timestamp",
                     "type": "string"
                 },
                 "jadwal_id": {
-                    "description": "The ID of the schedule associated with this ticket\nexample: 60d21b4667d0d8992e610c85",
                     "type": "string"
                 },
                 "kursi": {
-                    "description": "The seat code for this ticket\nexample: A1",
                     "type": "string"
                 },
                 "status": {
-                    "description": "The ticket status (confirmed, cancelled, used)\nenum: confirmed,cancelled,used\nexample: confirmed",
                     "type": "string"
                 },
                 "tanggal_pembelian": {
-                    "description": "The date and time when the ticket was purchased\nexample: 2025-07-22T15:04:05Z",
                     "type": "string"
                 },
                 "updated_at": {
-                    "description": "The record last update timestamp",
                     "type": "string"
                 },
                 "user_id": {
-                    "description": "The ID of the user who purchased the ticket\nexample: 60d21b4667d0d8992e610c84",
                     "type": "string"
                 }
             }
@@ -1710,43 +1852,33 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "address": {
-                    "description": "User's address\nexample: 123 Main Street, City",
                     "type": "string"
                 },
                 "email": {
-                    "description": "Email address\nexample: john.doe@example.com",
                     "type": "string"
                 },
                 "firstname": {
-                    "description": "User's first name\nexample: John",
                     "type": "string"
                 },
                 "gender": {
-                    "description": "User's gender\nexample: male",
                     "type": "string"
                 },
                 "lastname": {
-                    "description": "User's last name\nexample: Doe",
                     "type": "string"
                 },
                 "password": {
-                    "description": "Hashed password (never returned in responses)",
                     "type": "string"
                 },
                 "phone_number": {
-                    "description": "User's phone number\nexample: +62123456789",
                     "type": "string"
                 },
                 "profile_picture_url": {
-                    "description": "URL to user's profile picture\nexample: https://example.com/profile.jpg",
                     "type": "string"
                 },
                 "role": {
-                    "description": "User role (user or admin)\nenum: user,admin\nexample: user",
                     "type": "string"
                 },
                 "username": {
-                    "description": "Username for the account\nexample: johndoe",
                     "type": "string"
                 }
             }
@@ -1755,11 +1887,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "email": {
-                    "description": "User's email address\nexample: john.doe@example.com",
                     "type": "string"
                 },
                 "password": {
-                    "description": "User's password\nexample: securepassword123",
                     "type": "string"
                 }
             }
@@ -1768,43 +1898,33 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "address": {
-                    "description": "User's address\nexample: 123 Main Street, City",
                     "type": "string"
                 },
                 "email": {
-                    "description": "Email address\nexample: john.doe@example.com",
                     "type": "string"
                 },
                 "firstname": {
-                    "description": "User's first name\nexample: John",
                     "type": "string"
                 },
                 "gender": {
-                    "description": "User's gender\nexample: male",
                     "type": "string"
                 },
                 "lastname": {
-                    "description": "User's last name\nexample: Doe",
                     "type": "string"
                 },
                 "password": {
-                    "description": "Password for the account\nexample: securepassword123",
                     "type": "string"
                 },
                 "phone_number": {
-                    "description": "User's phone number\nexample: +62123456789",
                     "type": "string"
                 },
                 "profile_picture_url": {
-                    "description": "URL to user's profile picture\nexample: https://example.com/profile.jpg",
                     "type": "string"
                 },
                 "role": {
-                    "description": "User role (user or admin)\nenum: user,admin\nexample: user",
                     "type": "string"
                 },
                 "username": {
-                    "description": "Username for the account\nexample: johndoe",
                     "type": "string"
                 }
             }

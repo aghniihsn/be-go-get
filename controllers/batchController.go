@@ -93,7 +93,7 @@ func CreateBatchTikets(c *fiber.Ctx) error {
 		count, err := tiketCollection.CountDocuments(context.TODO(), bson.M{
 			"jadwal_id": jadwalID,
 			"kursi":     kursi,
-			"status":    models.TiketStatusConfirmed,
+			"status":    bson.M{"$in": []string{models.TiketStatusConfirmed, models.TiketStatusWaitingPayment}},
 		})
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
@@ -122,7 +122,7 @@ func CreateBatchTikets(c *fiber.Ctx) error {
 			UserID:           userID,
 			JadwalID:         jadwalID,
 			Kursi:            kursi,
-			Status:           models.TiketStatusConfirmed,
+			Status:           models.TiketStatusWaitingPayment, // Default status untuk tiket baru
 			TanggalPembelian: now,
 			CreatedAt:        now,
 			UpdatedAt:        now,

@@ -83,9 +83,10 @@ type Tiket struct {
 
 // Enum status tiket
 const (
-	TiketStatusConfirmed = "confirmed"
-	TiketStatusCancelled = "cancelled"
-	TiketStatusUsed      = "used"
+	TiketStatusWaitingPayment = "waiting_for_payment"
+	TiketStatusConfirmed      = "confirmed"
+	TiketStatusCancelled      = "cancelled"
+	TiketStatusUsed           = "used"
 )
 
 type Pembayaran struct {
