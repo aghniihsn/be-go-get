@@ -11,6 +11,6 @@ WORKDIR /app
 COPY --from=builder /app/app .
 COPY --from=builder /app/.env .
 COPY --from=builder /app/credentials.json* ./
-COPY --from=builder /app/uploads ./uploads
+RUN mkdir -p /app/uploads
 EXPOSE 8080
 CMD ["./app"]
