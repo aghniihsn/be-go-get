@@ -1,5 +1,5 @@
 # Dockerfile for Go Fiber + MongoDB backend (Railway deployment)
-FROM golang:1.21-alpine as builder
+FROM golang:1.24.2-alpine as builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
