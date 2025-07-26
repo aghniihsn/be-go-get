@@ -11,7 +11,10 @@ WORKDIR /app
 COPY --from=builder /app/app .
 COPY --from=builder /app/.env .
 COPY --from=builder /app/credentials.json* ./
+COPY --from=builder /app/docs /app/docs
+COPY --from=builder /app/swagger.json* ./
+COPY --from=builder /app/swagger.yaml* ./
 RUN mkdir -p /app/uploads
-RUN swag init
+RUN apk add --no-cache ca-certificates
 EXPOSE 8080
 CMD ["./app"]
