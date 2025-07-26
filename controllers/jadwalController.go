@@ -312,11 +312,22 @@ func DeleteJadwal(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID format"})
 	}
 
+	// Cascade delete: hapus semua tiket yang referensi ke jadwal ini
+	tiketCollection := config.DB.Collection("tikets")
+	tiketRes, err := tiketCollection.DeleteMany(context.TODO(), bson.M{"jadwal_id": objectID})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal hapus tiket terkait jadwal", "details": err.Error()})
+	}
+
+	// Hapus jadwal
 	res, err := jadwalCollection.DeleteOne(context.TODO(), bson.M{"_id": objectID})
 	if err != nil || res.DeletedCount == 0 {
 		return c.Status(404).JSON(fiber.Map{"error": "Jadwal not found"})
 	}
-	return c.JSON(fiber.Map{"message": "Jadwal deleted"})
+	return c.JSON(fiber.Map{
+		"message":        "Jadwal deleted beserta tiket terkait",
+		"deleted_tikets": tiketRes.DeletedCount,
+	})
 }
 
 // ValidateJadwalID godoc

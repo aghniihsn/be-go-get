@@ -75,7 +75,30 @@ func GetPembayaranByID(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Pembayaran not found"})
 	}
-	return c.JSON(pembayaran)
+
+	// Cek tiket
+	tiketCollection := config.DB.Collection("tikets")
+	var tiket models.Tiket
+	errTiket := tiketCollection.FindOne(context.TODO(), bson.M{"_id": pembayaran.TiketID}).Decode(&tiket)
+
+	// Cek jadwal jika tiket ada
+	jadwalStatus := ""
+	if errTiket == nil {
+		jadwalCollection := config.DB.Collection("jadwals")
+		var jadwal models.Jadwal
+		errJadwal := jadwalCollection.FindOne(context.TODO(), bson.M{"_id": tiket.JadwalID}).Decode(&jadwal)
+		if errJadwal != nil {
+			jadwalStatus = "Jadwal telah dihapus"
+		}
+	} else {
+		jadwalStatus = "Tiket telah dihapus"
+	}
+
+	response := fiber.Map{
+		"pembayaran":    pembayaran,
+		"jadwal_status": jadwalStatus,
+	}
+	return c.JSON(response)
 }
 
 // GetPembayaranByUserID godoc
