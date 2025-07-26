@@ -12,5 +12,6 @@ COPY --from=builder /app/app .
 COPY --from=builder /app/.env .
 COPY --from=builder /app/credentials.json* ./
 RUN mkdir -p /app/uploads
+RUN swag init
 EXPOSE 8080
 CMD ["./app"]
