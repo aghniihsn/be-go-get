@@ -18,7 +18,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:3000",
+    "host": "movietix.irc-enter.tech/api",
     "basePath": "/",
     "paths": {
         "/api/auth/login": {
