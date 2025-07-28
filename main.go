@@ -24,7 +24,7 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host movietix.irc-enter.tech
+// @host movietix.irc-enter.tech/api
 // @BasePath /
 
 // @securityDefinitions.apikey BearerAuth
