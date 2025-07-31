@@ -1944,7 +1944,7 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "movietix.irc-enter.tech",
 	BasePath:         "/",
-	Schemes:          []string{"http,https"},
+	Schemes:          []string{"http","https"},
 	Title:            "Cinema Booking API",
 	Description:      "Cinema ticket booking system with payment integration",
 	InfoInstanceName: "swagger",
