@@ -31,8 +31,6 @@ import (
 // @in header
 // @name Authorization
 
-// @schemes http
-
 func main() {
 	godotenv.Load()    // load .env
 	config.ConnectDB() // koneksi MongoDB
